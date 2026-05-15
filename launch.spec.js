@@ -107,3 +107,19 @@ test('flipper: left flipper activation kicks ball upward', async ({ page }) => {
   });
   expect(vy).toBeLessThan(-200);
 });
+
+
+test('bumper: hit bumper deflects with min outward speed', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.place(142, 100, 0, 0);
+    const speeds = [];
+    for (let i = 0; i < 90; i++){
+      window.__test.step(1);
+      speeds.push(Math.hypot(window.__test.ball.v.x, window.__test.ball.v.y));
+    }
+    return Math.max(...speeds);
+  });
+  expect(r).toBeGreaterThan(500);
+});

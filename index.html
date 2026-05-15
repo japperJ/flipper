@@ -117,6 +117,18 @@ function addArc(c, R, a0, a1, opts={}){
   arcRegistry.push({ c, R, a0, a1, outward: opts.outward ?? false, restitution: opts.restitution ?? 0.55 });
 }
 
+const bumperList = []; // { c, r, gain, value, flash }
+function addBumper(c, r, gain=1.6, value=100){ bumperList.push({c, r, gain, value, flash:0}); }
+
+const slingList = []; // { a, b, normal, gain, value, flash }
+function addSling(a, b, gain=1.5, value=50){
+  const sx = b.x-a.x, sy = b.y-a.y;
+  let nx = -sy, ny = sx;
+  const nl = Math.hypot(nx,ny)||1; nx/=nl; ny/=nl;
+  slingList.push({ a, b, normal:{x:nx,y:ny}, gain, value, flash:0 });
+  addSegment(a, b, { restitution: 0.7, kind:'sling' });
+}
+
 function physicsStep(dt){
   flippers.L.pressed = input.L;
   flippers.R.pressed = input.R;
@@ -143,6 +155,10 @@ function physicsStep(dt){
     for (const f of [flippers.L, flippers.R]){
       const hit = flipperCollide(f, ball.p, d, ball.r);
       if (hit && (!best || hit.toi < best.toi)) best = { ...hit, surface: { kind:'flipper', restitution: 0.2 } };
+    }
+    for (const bp of bumperList){
+      const hit = sweepCircleArc(ball.p, d, ball.r, bp.c, bp.r, 0, 2*Math.PI, true);
+      if (hit && (!best || hit.toi < best.toi)) best = { ...hit, surface:{ kind:'bumper', restitution: 0.8 }, bumper: bp };
     }
     if (!best){
       ball.p.x += d.x; ball.p.y += d.y;
@@ -172,6 +188,23 @@ function physicsStep(dt){
       remaining *= (1 - best.toi);
       continue;
     }
+    if (best.bumper){
+      const bp = best.bumper;
+      const eps = 1e-3;
+      ball.p.x += d.x * Math.max(0, best.toi - eps);
+      ball.p.y += d.y * Math.max(0, best.toi - eps);
+      const speed = Math.hypot(ball.v.x, ball.v.y);
+      const inSpeed = Math.max(speed, 400);
+      const outSpeed = Math.max(inSpeed * bp.gain, 600);
+      ball.v.x = best.normal.x * outSpeed;
+      ball.v.y = best.normal.y * outSpeed;
+      ball.p.x += best.normal.x * 0.5;
+      ball.p.y += best.normal.y * 0.5;
+      bp.flash = 0.15;
+      state.score += bp.value * state.mult;
+      remaining *= (1 - best.toi);
+      continue;
+    }
     const eps = 1e-3;
     ball.p.x += d.x * Math.max(0, best.toi - eps);
     ball.p.y += d.y * Math.max(0, best.toi - eps);
@@ -183,6 +216,17 @@ function physicsStep(dt){
     ball.v.y -= factor * vn * best.normal.y;
     ball.p.x += best.normal.x * 0.01;
     ball.p.y += best.normal.y * 0.01;
+    if (best.surface && best.surface.kind === 'sling'){
+      const sl = slingList.find(s => s.a === best.surface.a || s.b === best.surface.b);
+      if (sl){
+        const speed = Math.hypot(ball.v.x, ball.v.y);
+        const boost = Math.max(speed * (sl.gain - 1), 250);
+        ball.v.x += sl.normal.x * boost;
+        ball.v.y += sl.normal.y * boost;
+        sl.flash = 0.15;
+        state.score += sl.value * state.mult;
+      }
+    }
     remaining *= (1 - best.toi);
   }
 }
@@ -212,6 +256,14 @@ function buildTable(){
   addArc({x:285, y:700}, 45, 1.5*Math.PI, 2*Math.PI, { outward:false, restitution:0.4 });
   // Curved ceiling
   addArc({x:CONFIG.W/2, y:24}, 240, Math.PI, 2*Math.PI, { outward:false, restitution:0.6 });
+
+  addBumper({x:140, y:250}, 20, 1.6, 100);
+  addBumper({x:210, y:200}, 20, 1.6, 100);
+  addBumper({x:280, y:250}, 20, 1.6, 100);
+
+  // Slingshots: triangular guards above each flipper
+  addSling({x:65,  y:540}, {x:115, y:600}, 1.5, 50);
+  addSling({x:355, y:540}, {x:305, y:600}, 1.5, 50);
 }
 
 buildTable();
@@ -322,6 +374,17 @@ function render(){
     ctx.lineCap = 'round';
     ctx.lineWidth = 14;
     ctx.beginPath(); ctx.moveTo(f.pivot.x,f.pivot.y); ctx.lineTo(tip.x,tip.y); ctx.stroke();
+  }
+  for (const bp of bumperList){
+    ctx.fillStyle = bp.flash > 0 ? '#fff' : '#5cf';
+    ctx.beginPath(); ctx.arc(bp.c.x, bp.c.y, bp.r, 0, 2*Math.PI); ctx.fill();
+    bp.flash = Math.max(0, bp.flash - 1/60);
+  }
+  for (const sl of slingList){
+    ctx.strokeStyle = sl.flash > 0 ? '#fff' : '#f3a';
+    ctx.lineWidth = 6; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(sl.a.x, sl.a.y); ctx.lineTo(sl.b.x, sl.b.y); ctx.stroke();
+    sl.flash = Math.max(0, sl.flash - 1/60);
   }
   ctx.fillStyle = '#fff';
   ctx.beginPath(); ctx.arc(ball.p.x, ball.p.y, ball.r, 0, Math.PI*2); ctx.fill();
