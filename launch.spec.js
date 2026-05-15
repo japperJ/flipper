@@ -182,3 +182,15 @@ test('hud: score displays and game-over allows restart', async ({ page }) => {
   expect(r.score).toBe(0);
   expect(r.phase).toBe('ready');
 });
+
+test('polish: 5 seconds of gameplay does not throw', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.goto(URL);
+  await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.place(142, 100, 30, 200);
+    for (let i = 0; i < 240*5; i++) window.__test.step(1);
+  });
+  expect(errors).toEqual([]);
+});
