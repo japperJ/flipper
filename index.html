@@ -32,6 +32,77 @@ const V = {
 };
 const clamp=(v,lo,hi)=>v<lo?lo:v>hi?hi:v;
 
+// Swept circle (center p0, displacement d=v*dt, radius r) vs static segment [a,b].
+// Returns { toi in [0,1], normal } or null. Normal points from segment toward circle.
+function sweepCircleSegment(p0, d, r, a, b){
+  const sx = b.x-a.x, sy = b.y-a.y;
+  const segLen2 = sx*sx + sy*sy;
+  if (segLen2 < 1e-6) return null;
+  // Segment normal (left-hand)
+  let nx = -sy, ny = sx;
+  const nl = Math.hypot(nx,ny); nx/=nl; ny/=nl;
+  // Ensure normal points toward the moving circle's start
+  const side = (p0.x-a.x)*nx + (p0.y-a.y)*ny;
+  if (side < 0){ nx=-nx; ny=-ny; }
+  // Distance from start center to infinite line along normal
+  const dist0 = (p0.x-a.x)*nx + (p0.y-a.y)*ny; // >= 0
+  const vN = d.x*nx + d.y*ny; // signed motion along normal (negative = approaching)
+  if (vN >= 0) return null;
+  const toi = (dist0 - r) / (-vN);
+  if (toi < 0 || toi > 1) return null;
+  // Contact point along segment axis
+  const cx = p0.x + d.x*toi, cy = p0.y + d.y*toi;
+  const t = ((cx-a.x)*sx + (cy-a.y)*sy) / segLen2;
+  if (t < 0 || t > 1){
+    // Check endpoints (circle vs point)
+    return sweepCircleEnd(p0,d,r,a) ?? sweepCircleEnd(p0,d,r,b);
+  }
+  return { toi, normal:{x:nx,y:ny} };
+}
+
+function sweepCircleEnd(p0, d, r, q){
+  // Circle of radius r centered at p0+d*t collides with point q
+  const fx = p0.x - q.x, fy = p0.y - q.y;
+  const A = d.x*d.x + d.y*d.y;
+  const B = 2*(fx*d.x + fy*d.y);
+  const C = fx*fx + fy*fy - r*r;
+  if (A < 1e-9) return null;
+  const disc = B*B - 4*A*C;
+  if (disc < 0) return null;
+  const t = (-B - Math.sqrt(disc)) / (2*A);
+  if (t < 0 || t > 1) return null;
+  const cx = p0.x + d.x*t, cy = p0.y + d.y*t;
+  let nx = cx - q.x, ny = cy - q.y;
+  const nl = Math.hypot(nx,ny)||1; nx/=nl; ny/=nl;
+  return { toi:t, normal:{x:nx,y:ny} };
+}
+
+function sweepCircleArc(p0, d, r, c, R, a0, a1, outward=true){
+  // Outward arc (ball outside circle of radius R-r at center c). Treat as circle vs circle.
+  const target = outward ? (R + r) : (R - r);
+  const fx = p0.x - c.x, fy = p0.y - c.y;
+  const A = d.x*d.x + d.y*d.y;
+  const B = 2*(fx*d.x + fy*d.y);
+  const C = fx*fx + fy*fy - target*target;
+  if (A < 1e-9) return null;
+  const disc = B*B - 4*A*C;
+  if (disc < 0) return null;
+  const t = outward
+    ? (-B - Math.sqrt(disc)) / (2*A)
+    : (-B + Math.sqrt(disc)) / (2*A);
+  if (t < 0 || t > 1) return null;
+  const cx = p0.x + d.x*t, cy = p0.y + d.y*t;
+  const ang = Math.atan2(cy - c.y, cx - c.x);
+  const norm = a => { a = a % (2*Math.PI); return a < 0 ? a + 2*Math.PI : a; };
+  const A0 = norm(a0), A1 = norm(a1), AN = norm(ang);
+  const inArc = A0 <= A1 ? (AN >= A0 && AN <= A1) : (AN >= A0 || AN <= A1);
+  if (!inArc) return null;
+  let nx = (cx - c.x), ny = (cy - c.y);
+  const nl = Math.hypot(nx,ny)||1; nx/=nl; ny/=nl;
+  if (!outward){ nx=-nx; ny=-ny; }
+  return { toi:t, normal:{x:nx,y:ny} };
+}
+
 // ============ 3. PHYSICS ============
 const ball = { p:{x:400, y:680}, v:{x:0, y:0}, r: CONFIG.BALL_R };
 function physicsStep(dt){ /* TODO Task 3 */ }
@@ -108,6 +179,7 @@ window.__test = {
   place(x,y,vx=0,vy=0){ ball.p={x,y}; ball.v={x:vx,y:vy}; },
   press(key){ const e = new KeyboardEvent('keydown',{key}); window.dispatchEvent(e); },
   release(key){ const e = new KeyboardEvent('keyup',{key}); window.dispatchEvent(e); },
+  _math: { sweepCircleSegment, sweepCircleEnd, sweepCircleArc },
 };
 </script>
 </body>

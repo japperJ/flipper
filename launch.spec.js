@@ -13,3 +13,20 @@ test('page loads, canvas + __test hook exist', async ({ page }) => {
   );
   expect(has).toBe(true);
 });
+
+test('math: sweepCircleSegment returns earliest TOI and normal', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    const { sweepCircleSegment } = window.__test._math;
+    // ball at (100,100), moving right, segment vertical at x=150 from y=50..150
+    const hit = sweepCircleSegment(
+      {x:100,y:100}, {x:100,y:0}, 11,
+      {x:150,y:50}, {x:150,y:150}
+    );
+    return hit;
+  });
+  expect(r).not.toBeNull();
+  expect(r.toi).toBeGreaterThan(0);
+  expect(r.toi).toBeLessThan(1);
+  expect(r.normal.x).toBeCloseTo(-1, 2);
+});
