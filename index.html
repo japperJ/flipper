@@ -527,15 +527,12 @@ function render(){
     ctx.stroke();
   }
   ctx.shadowBlur = 0;
-  // Drain gap indicator
-  ctx.strokeStyle = 'rgba(255, 60, 90, 0.5)';
-  ctx.setLineDash([4, 4]);
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(DRAIN_LEFT, CONFIG.H - 1);
-  ctx.lineTo(DRAIN_RIGHT, CONFIG.H - 1);
-  ctx.stroke();
-  ctx.setLineDash([]);
+  // Drain gap label — this is an OPENING in the floor, not a wall.
+  ctx.fillStyle = 'rgba(255, 80, 110, 0.85)';
+  ctx.font = 'bold 11px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('▼ DRAIN ▼', (DRAIN_LEFT + DRAIN_RIGHT) / 2, CONFIG.H - 2);
   for (const f of [flippers.L, flippers.R]){
     const tip = flipperTip(f);
     ctx.strokeStyle = '#fd5';
