@@ -136,6 +136,20 @@ function serveBall(){
   ball.p = { x: 400, y: 680 };
   ball.v = { x: 0, y: 0 };
   state.phase = 'ready';
+  state.saverUntil = performance.now()/1000 + 5;
+}
+
+function restartGame(){
+  state.score = 0;
+  state.balls = 3;
+  state.mult = 1;
+  state.comboCount = 0;
+  state.comboUntil = 0;
+  state.dropCycles = 0;
+  state.saverUntil = performance.now()/1000 + 5;
+  state.phase = 'ready';
+  for (const dp of dropList){ dp.down = false; dp.downUntil = 0; }
+  serveBall();
 }
 
 function handleDrain(){
@@ -149,7 +163,8 @@ function handleDrain(){
   if (state.balls <= 0){
     state.phase = 'gameover';
     if (state.score > state.hi) state.hi = state.score;
-    serveBall();
+    ball.p = { x: -100, y: -100 };
+    ball.v = { x: 0, y: 0 };
     return;
   }
   serveBall();
@@ -428,6 +443,7 @@ const state = { phase:'ready', score:0, hi:0, balls:3, mult:1, saverUntil:0, dro
 // ============ 8. INPUT ============
 const input = { L:false, R:false, plunge:false };
 window.addEventListener('keydown', e=>{
+  if (e.key === ' ' && state.phase === 'gameover'){ restartGame(); return; }
   if (e.key==='z' || e.key==='Z' || e.key==='ArrowLeft') input.L = true;
   if (e.key==='/' || e.key==='ArrowRight') input.R = true;
   if (e.key===' ') input.plunge = true;
@@ -473,6 +489,28 @@ function render(){
   ctx.fillStyle = '#5cf';
   ctx.font = "10px 'Press Start 2P', monospace";
   ctx.fillText('NEON PINBALL', 8, 16);
+  ctx.fillStyle = '#fff';
+  ctx.fillText('SCORE ' + state.score.toString().padStart(7,'0'), 8, 36);
+  ctx.fillText('BALLS ' + state.balls, 8, 50);
+  ctx.fillStyle = state.mult > 1 ? '#fc4' : '#888';
+  ctx.fillText('x' + state.mult, 380, 36);
+  const nowSec = performance.now()/1000;
+  if (state.saverUntil > nowSec){
+    ctx.fillStyle = '#5f5';
+    ctx.fillText('SAVER', 350, 50);
+  }
+  if (state.phase === 'gameover'){
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(0, CONFIG.H/2 - 40, CONFIG.W, 80);
+    ctx.fillStyle = '#f5a';
+    ctx.font = "16px 'Press Start 2P', monospace";
+    ctx.textAlign = 'center';
+    ctx.fillText('GAME OVER', CONFIG.W/2, CONFIG.H/2);
+    ctx.font = "10px 'Press Start 2P', monospace";
+    ctx.fillStyle = '#fff';
+    ctx.fillText('PRESS SPACE', CONFIG.W/2, CONFIG.H/2 + 24);
+    ctx.textAlign = 'start';
+  }
 }
 
 // ============ 10. LOOP ============
@@ -513,6 +551,7 @@ window.__test = {
   _addTempFloor(x1,y1,x2,y2){ addSegment({x:x1,y:y1},{x:x2,y:y2}); },
   plungerCharge(amount){ plunger.charge = clamp(amount, 0, 1); },
   plungerRelease(){ plungerRelease(); },
+  restart(){ restartGame(); },
 };
 </script>
 </body>

@@ -162,3 +162,23 @@ test('drain: ball falling out decrements balls and resets to shooter lane', asyn
   expect(r.ballX).toBeGreaterThan(380);
   expect(r.ballY).toBeGreaterThan(600);
 });
+
+test('hud: score displays and game-over allows restart', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.state.balls = 0;
+    window.__test.state.phase = 'gameover';
+    window.__test.state.score = 12345;
+    window.__test.step(1);
+    window.__test.restart();
+    return {
+      balls: window.__test.state.balls,
+      score: window.__test.state.score,
+      phase: window.__test.state.phase,
+    };
+  });
+  expect(r.balls).toBe(3);
+  expect(r.score).toBe(0);
+  expect(r.phase).toBe('ready');
+});
