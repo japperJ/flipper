@@ -94,3 +94,16 @@ test('plunger: hold + release moves ball up past the gate', async ({ page }) => 
   });
   expect(out).toBe(true);
 });
+
+test('flipper: left flipper activation kicks ball upward', async ({ page }) => {
+  await page.goto(URL);
+  const vy = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.place(155, 600, 0, 0);
+    window.__test.press('z');
+    for (let i = 0; i < 30; i++) window.__test.step(1);
+    window.__test.release('z');
+    return window.__test.ball.v.y;
+  });
+  expect(vy).toBeLessThan(-200);
+});

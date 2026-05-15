@@ -118,6 +118,9 @@ function addArc(c, R, a0, a1, opts={}){
 }
 
 function physicsStep(dt){
+  flippers.L.pressed = input.L;
+  flippers.R.pressed = input.R;
+  flipperStep(dt);
   if (gateSeg) gateSeg.enabled = !(ball.p.x > SHOOTER_X && ball.v.y < 0);
   // Integrate forces
   ball.v.y += CONFIG.GRAVITY * dt;
@@ -137,10 +140,37 @@ function physicsStep(dt){
       const hit = sweepCircleArc(ball.p, d, ball.r, a.c, a.R, a.a0, a.a1, a.outward);
       if (hit && (!best || hit.toi < best.toi)){ best = hit; best.surface = a; }
     }
+    for (const f of [flippers.L, flippers.R]){
+      const hit = flipperCollide(f, ball.p, d, ball.r);
+      if (hit && (!best || hit.toi < best.toi)) best = { ...hit, surface: { kind:'flipper', restitution: 0.2 } };
+    }
     if (!best){
       ball.p.x += d.x; ball.p.y += d.y;
       remaining = 0;
       break;
+    }
+    if (best.flipper){
+      const f = best.flipper;
+      const eps = 1e-3;
+      ball.p.x += d.x * Math.max(0, best.toi - eps);
+      ball.p.y += d.y * Math.max(0, best.toi - eps);
+      const arm = { x: ball.p.x - f.pivot.x, y: ball.p.y - f.pivot.y };
+      const vSurf = { x: -arm.y * f.angVel, y: arm.x * f.angVel };
+      const vRel = { x: ball.v.x - vSurf.x, y: ball.v.y - vSurf.y };
+      const dn = vRel.x*best.normal.x + vRel.y*best.normal.y;
+      const e = 1.05;
+      const rx = vRel.x - (1+e)*dn*best.normal.x;
+      const ry = vRel.y - (1+e)*dn*best.normal.y;
+      ball.v.x = vSurf.x + rx;
+      ball.v.y = vSurf.y + ry;
+      ball.p.x += best.normal.x * 0.01;
+      ball.p.y += best.normal.y * 0.01;
+      if (best.penetration){
+        ball.p.x += best.normal.x * best.penetration;
+        ball.p.y += best.normal.y * best.penetration;
+      }
+      remaining *= (1 - best.toi);
+      continue;
     }
     const eps = 1e-3;
     ball.p.x += d.x * Math.max(0, best.toi - eps);
@@ -188,7 +218,65 @@ buildTable();
 
 // ============ 5. FLIPPERS ============
 const flippers = { L: null, R: null };
-function buildFlippers(){ /* TODO Task 7 */ }
+function makeFlipper(pivot, side){
+  const restAngle = side==='L' ? 0.45 : Math.PI - 0.45;
+  const upAngle   = side==='L' ? -0.45 : Math.PI + 0.45;
+  return {
+    pivot, side, length: 62, tipR: 7, baseR: 11,
+    angle: restAngle, angleRest: restAngle, angleUp: upAngle,
+    angVel: 0, state: 'rest',
+    pressed: false,
+  };
+}
+
+flippers.L = makeFlipper({x:135, y:620}, 'L');
+flippers.R = makeFlipper({x:285, y:620}, 'R');
+
+function flipperTip(f){
+  return { x: f.pivot.x + Math.cos(f.angle)*f.length, y: f.pivot.y + Math.sin(f.angle)*f.length };
+}
+
+function flipperStep(dt){
+  for (const f of [flippers.L, flippers.R]){
+    const target = f.pressed ? f.angleUp : f.angleRest;
+    const delta = target - f.angle;
+    const maxSpeed = f.pressed ? 18 : 10;  // rad/s
+    const step = Math.sign(delta) * Math.min(Math.abs(delta), maxSpeed * dt);
+    f.angVel = dt > 0 ? step / dt : 0;
+    f.angle += step;
+  }
+}
+
+function flipperCollide(f, p0, d, r){
+  const tip = flipperTip(f);
+  // Overlap rescue: flipper may sweep into a (near-)stationary ball between substeps.
+  // Detect penetration of the swept-radius capsule and report a toi=0 hit so the
+  // surface-velocity kick branch can resolve it.
+  const ax = tip.x - f.pivot.x, ay = tip.y - f.pivot.y;
+  const segLen2 = ax*ax + ay*ay;
+  let tParam = ((p0.x - f.pivot.x)*ax + (p0.y - f.pivot.y)*ay) / segLen2;
+  tParam = Math.max(0, Math.min(1, tParam));
+  const cx = f.pivot.x + ax*tParam, cy = f.pivot.y + ay*tParam;
+  const dx = p0.x - cx, dy = p0.y - cy;
+  const dist = Math.hypot(dx, dy);
+  const radSum = r + (tParam < 0.5 ? f.baseR : f.tipR);
+  if (dist < radSum - 1e-3){
+    const arm = { x: cx - f.pivot.x, y: cy - f.pivot.y };
+    const vSurf = { x: -arm.y * f.angVel, y: arm.x * f.angVel };
+    const vmag = Math.hypot(vSurf.x, vSurf.y);
+    let nx, ny;
+    if (vmag > 1e-3){ nx = vSurf.x / vmag; ny = vSurf.y / vmag; }
+    else { const nl = dist || 1; nx = dx/nl; ny = dy/nl; }
+    return { toi: 0, normal: { x: nx, y: ny }, flipper: f, penetration: (radSum - dist) + 0.5 };
+  }
+  const seg = sweepCircleSegment(p0, d, r + f.tipR, f.pivot, tip);
+  const ca = sweepCircleEnd(p0, d, r + f.baseR, f.pivot);
+  const cb = sweepCircleEnd(p0, d, r + f.tipR, tip);
+  let best = null;
+  for (const h of [seg, ca, cb]) if (h && (!best || h.toi < best.toi)) best = h;
+  if (!best) return null;
+  return { ...best, flipper: f };
+}
 
 // ============ 6. PLUNGER ============
 const plunger = { charge:0, charging:false, maxImpulse: 1100, chargeRate: 1.0 };
@@ -228,6 +316,13 @@ const ctx = canvas.getContext('2d');
 function render(){
   ctx.fillStyle = '#0a0612';
   ctx.fillRect(0,0,CONFIG.W,CONFIG.H);
+  for (const f of [flippers.L, flippers.R]){
+    const tip = flipperTip(f);
+    ctx.strokeStyle = '#fd5';
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 14;
+    ctx.beginPath(); ctx.moveTo(f.pivot.x,f.pivot.y); ctx.lineTo(tip.x,tip.y); ctx.stroke();
+  }
   ctx.fillStyle = '#fff';
   ctx.beginPath(); ctx.arc(ball.p.x, ball.p.y, ball.r, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#5cf';
