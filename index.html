@@ -132,11 +132,46 @@ function addSling(a, b, gain=1.5, value=50){
 const dropList = []; // { c (center), w, h, down, downUntil, value }
 function addDrop(c, w=24, h=8, value=200){ dropList.push({ c, w, h, down:false, downUntil:0, value }); }
 
+function serveBall(){
+  ball.p = { x: 400, y: 680 };
+  ball.v = { x: 0, y: 0 };
+  state.phase = 'ready';
+}
+
+function handleDrain(){
+  if (ball.p.y <= CONFIG.H + 50) return;
+  const nowSec = performance.now()/1000;
+  if (state.saverUntil && nowSec < state.saverUntil){
+    serveBall();
+    return;
+  }
+  state.balls = Math.max(0, state.balls - 1);
+  if (state.balls <= 0){
+    state.phase = 'gameover';
+    if (state.score > state.hi) state.hi = state.score;
+    serveBall();
+    return;
+  }
+  serveBall();
+}
+
+function registerScoreEvent(){
+  state.comboCount += 1;
+  state.comboUntil = performance.now()/1000 + 1.5;
+  if (state.comboCount >= 4) state.mult = 2;
+  else if (state.comboCount >= 2) state.mult = 1;
+}
+
 function physicsStep(dt){
   flippers.L.pressed = input.L;
   flippers.R.pressed = input.R;
   const nowSec = performance.now()/1000;
   for (const dp of dropList){ if (dp.down && dp.downUntil && nowSec >= dp.downUntil){ dp.down = false; dp.downUntil = 0; } }
+  if (state.comboUntil && nowSec > state.comboUntil){
+    state.comboCount = 0;
+    state.comboUntil = 0;
+    state.mult = 1;
+  }
   flipperStep(dt);
   if (gateSeg) gateSeg.enabled = !(ball.p.x > SHOOTER_X && ball.v.y < 0);
   // Integrate forces
@@ -214,6 +249,7 @@ function physicsStep(dt){
       ball.p.y += best.normal.y * 0.5;
       bp.flash = 0.15;
       state.score += bp.value * state.mult;
+      registerScoreEvent();
       remaining *= (1 - best.toi);
       continue;
     }
@@ -231,6 +267,7 @@ function physicsStep(dt){
       dp.down = true;
       dp.downUntil = performance.now()/1000 + 3.5;
       state.score += dp.value * state.mult;
+      registerScoreEvent();
       if (dropList.every(d => d.down)){
         state.dropCycles += 1;
         state.score += 1500 * state.mult;
@@ -259,10 +296,12 @@ function physicsStep(dt){
         ball.v.y += sl.normal.y * boost;
         sl.flash = 0.15;
         state.score += sl.value * state.mult;
+        registerScoreEvent();
       }
     }
     remaining *= (1 - best.toi);
   }
+  handleDrain();
 }
 
 // ============ 4. TABLE ============

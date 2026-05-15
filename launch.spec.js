@@ -69,9 +69,13 @@ test('outlanes: ball entering left outlane returns toward inlane', async ({ page
   const ok = await page.evaluate(() => {
     window.__test.pause();
     window.__test.place(110, 600, 0, 200);
-    for (let i = 0; i < 240*3; i++) window.__test.step(1);
-    const b = window.__test.ball;
-    return Math.hypot(b.v.x, b.v.y) > 5 || b.p.y > 720;
+    let deflected = false;
+    for (let i = 0; i < 60; i++){
+      window.__test.step(1);
+      const b = window.__test.ball;
+      if (Math.abs(b.v.x) > 20 || b.p.x > 130) { deflected = true; break; }
+    }
+    return deflected;
   });
   expect(ok).toBe(true);
 });
@@ -136,4 +140,25 @@ test('drops: knocking all three resets bank and increments cycles', async ({ pag
     return window.__test.state.dropCycles;
   });
   expect(cycles).toBeGreaterThanOrEqual(1);
+});
+
+test('drain: ball falling out decrements balls and resets to shooter lane', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    const startBalls = window.__test.state.balls;
+    window.__test.place(210, 800, 0, 200);
+    for (let i = 0; i < 240; i++) window.__test.step(1);
+    const b = window.__test.ball;
+    return {
+      balls: window.__test.state.balls,
+      startBalls,
+      ballX: b.p.x,
+      ballY: b.p.y,
+      phase: window.__test.state.phase,
+    };
+  });
+  expect(r.balls).toBe(r.startBalls - 1);
+  expect(r.ballX).toBeGreaterThan(380);
+  expect(r.ballY).toBeGreaterThan(600);
 });
