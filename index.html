@@ -331,24 +331,24 @@ const SHOOTER_GATE_Y = 80;
 const DRAIN_LEFT = 175, DRAIN_RIGHT = 245;
 
 function buildTable(){
-  // Outer perimeter — top, left, right
-  addSegment({x:0,   y:24},  {x:CONFIG.W, y:24});
+  // Outer perimeter — top (only over playfield, not over shooter lane), left, right
+  addSegment({x:0,   y:24},  {x:SHOOTER_X, y:24});
   addSegment({x:0,   y:24},  {x:0,        y:CONFIG.H});
   addSegment({x:CONFIG.W, y:24}, {x:CONFIG.W, y:CONFIG.H});
   // Floor with drain gap
   addSegment({x:0,         y:CONFIG.H}, {x:DRAIN_LEFT, y:CONFIG.H});
   addSegment({x:DRAIN_RIGHT, y:CONFIG.H}, {x:CONFIG.W, y:CONFIG.H});
-  // Shooter lane divider: top portion is a one-way gate, bottom is permanent
-  gateSeg = { a:{x:SHOOTER_X,y:24}, b:{x:SHOOTER_X,y:80}, restitution:0.55, friction:0.02, kind:'gate', enabled:true };
-  segments.push(gateSeg);
-  addSegment({x:SHOOTER_X, y:80}, {x:SHOOTER_X, y:CONFIG.H-40});
+  // Shooter lane divider runs from the deflector base down to the inlane bend.
+  addSegment({x:SHOOTER_X, y:90}, {x:SHOOTER_X, y:CONFIG.H-40});
+  // Launch deflector: diagonal closing the top of the shooter lane so a launched ball
+  // is thrown leftward into the playfield instead of bouncing back down. It also acts
+  // as the one-way "lid" — once the ball clears it, geometry prevents re-entry.
+  addSegment({x:SHOOTER_X, y:24}, {x:CONFIG.W, y:90}, { restitution: 0.85 });
 
   // Left outlane return: arc centered at (135, 700) radius 45, from angle pi to 1.5pi (top-left quadrant of the circle)
   addArc({x:135, y:700}, 45, Math.PI, 1.5*Math.PI, { outward:false, restitution:0.4 });
   // Right outlane return
   addArc({x:285, y:700}, 45, 1.5*Math.PI, 2*Math.PI, { outward:false, restitution:0.4 });
-  // Curved ceiling
-  addArc({x:CONFIG.W/2, y:24}, 240, Math.PI, 2*Math.PI, { outward:false, restitution:0.6 });
 
   addBumper({x:140, y:250}, 20, 1.6, 100);
   addBumper({x:210, y:200}, 20, 1.6, 100);
