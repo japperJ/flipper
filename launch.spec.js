@@ -46,3 +46,20 @@ test('physics: ball falls under gravity and bounces off floor', async ({ page })
   expect(r.after.y).toBeLessThan(700);
   expect(r.after.vy).toBeLessThanOrEqual(0);
 });
+
+test('table: ball stays inside outer walls', async ({ page }) => {
+  await page.goto(URL);
+  const oob = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.place(210, 100, 50, 50);
+    let outside = false;
+    for (let i = 0; i < 240*6; i++){
+      window.__test.step(1);
+      const b = window.__test.ball;
+      if (b.p.y > 720) continue;
+      if (b.p.x < 0 || b.p.x > 420 || b.p.y < 0) { outside = true; break; }
+    }
+    return outside;
+  });
+  expect(oob).toBe(false);
+});

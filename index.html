@@ -147,7 +147,23 @@ function physicsStep(dt){
 
 // ============ 4. TABLE ============
 const walls = []; const arcs = []; const bumpers = []; const slings = []; const drops = [];
-function buildTable(){ /* TODO Task 5 */ }
+const SHOOTER_X = 380;
+const SHOOTER_GATE_Y = 80;
+const DRAIN_LEFT = 175, DRAIN_RIGHT = 245;
+
+function buildTable(){
+  // Outer perimeter — top, left, right
+  addSegment({x:0,   y:24},  {x:CONFIG.W, y:24});
+  addSegment({x:0,   y:24},  {x:0,        y:CONFIG.H});
+  addSegment({x:CONFIG.W, y:24}, {x:CONFIG.W, y:CONFIG.H});
+  // Floor with drain gap
+  addSegment({x:0,         y:CONFIG.H}, {x:DRAIN_LEFT, y:CONFIG.H});
+  addSegment({x:DRAIN_RIGHT, y:CONFIG.H}, {x:CONFIG.W, y:CONFIG.H});
+  // Shooter lane divider (the one-way gate is added in Task 6)
+  addSegment({x:SHOOTER_X, y:24}, {x:SHOOTER_X, y:CONFIG.H-40});
+}
+
+buildTable();
 
 // ============ 5. FLIPPERS ============
 const flippers = { L: null, R: null };
@@ -182,6 +198,9 @@ function render(){
   ctx.fillRect(0,0,CONFIG.W,CONFIG.H);
   ctx.fillStyle = '#fff';
   ctx.beginPath(); ctx.arc(ball.p.x, ball.p.y, ball.r, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#5cf';
+  ctx.font = "10px 'Press Start 2P', monospace";
+  ctx.fillText('NEON PINBALL', 8, 16);
 }
 
 // ============ 10. LOOP ============
