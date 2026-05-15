@@ -350,9 +350,12 @@ function buildTable(){
   addSegment({x:0,   y:24},  {x:SHOOTER_X, y:24});
   addSegment({x:0,   y:24},  {x:0,        y:CONFIG.H});
   addSegment({x:CONFIG.W, y:24}, {x:CONFIG.W, y:CONFIG.H});
-  // Floor with drain gap
-  addSegment({x:0,         y:CONFIG.H}, {x:DRAIN_LEFT, y:CONFIG.H});
-  addSegment({x:DRAIN_RIGHT, y:CONFIG.H}, {x:CONFIG.W, y:CONFIG.H});
+  // Outlane floors slope toward the drain so a ball that comes to rest at the
+  // bottom rolls into it instead of sitting on a flat lip. The shooter-lane
+  // floor stays flat so a freshly served ball doesn't drift away from rest.
+  addSegment({x:0,           y:CONFIG.H-20}, {x:DRAIN_LEFT,  y:CONFIG.H});
+  addSegment({x:DRAIN_RIGHT,  y:CONFIG.H},   {x:SHOOTER_X,   y:CONFIG.H-20});
+  addSegment({x:SHOOTER_X,    y:CONFIG.H-20},{x:CONFIG.W,    y:CONFIG.H-20});
   // Shooter lane divider runs from the deflector base down to the inlane bend.
   addSegment({x:SHOOTER_X, y:120}, {x:SHOOTER_X, y:CONFIG.H-40});
   // Launch deflector: steep diagonal at the top of the shooter lane. A fast launched
