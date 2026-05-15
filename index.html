@@ -363,10 +363,13 @@ function buildTable(){
   // down on the left side — classic launch-lane "around the top" trajectory.
   addSegment({x:SHOOTER_X, y:24}, {x:CONFIG.W, y:120}, { restitution: 0.92 });
 
-  // Left outlane return: arc centered at (135, 700) radius 45, from angle pi to 1.5pi (top-left quadrant of the circle)
-  addArc({x:135, y:700}, 45, Math.PI, 1.5*Math.PI, { outward:false, restitution:0.4 });
-  // Right outlane return
-  addArc({x:285, y:700}, 45, 1.5*Math.PI, 2*Math.PI, { outward:false, restitution:0.4 });
+  // Outlane separators: narrow the gap between each slingshot and the side wall
+  // so the ball can't just freely drop down the outer channel. Each is a
+  // near-vertical rail forming the inner edge of a thin outlane that still
+  // lets the ball drain on the outside, but funnels most balls back toward
+  // the flipper.
+  addSegment({x:30,  y:560}, {x:25,  y:680});
+  addSegment({x:390, y:560}, {x:395, y:680});
 
   addBumper({x:140, y:250}, 20, 1.6, 100);
   addBumper({x:210, y:200}, 20, 1.6, 100);
