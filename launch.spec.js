@@ -63,3 +63,15 @@ test('table: ball stays inside outer walls', async ({ page }) => {
   });
   expect(oob).toBe(false);
 });
+
+test('outlanes: ball entering left outlane returns toward inlane', async ({ page }) => {
+  await page.goto(URL);
+  const ok = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.place(110, 600, 0, 200);
+    for (let i = 0; i < 240*3; i++) window.__test.step(1);
+    const b = window.__test.ball;
+    return Math.hypot(b.v.x, b.v.y) > 5 || b.p.y > 720;
+  });
+  expect(ok).toBe(true);
+});

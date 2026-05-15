@@ -111,6 +111,11 @@ function addSegment(a, b, opts={}){
   segments.push({ a, b, restitution: opts.restitution ?? 0.55, friction: opts.friction ?? 0.02, kind: opts.kind ?? 'wall' });
 }
 
+const arcRegistry = []; // { c, R, a0, a1, outward, restitution }
+function addArc(c, R, a0, a1, opts={}){
+  arcRegistry.push({ c, R, a0, a1, outward: opts.outward ?? false, restitution: opts.restitution ?? 0.55 });
+}
+
 function physicsStep(dt){
   // Integrate forces
   ball.v.y += CONFIG.GRAVITY * dt;
@@ -124,6 +129,10 @@ function physicsStep(dt){
     for (const s of segments){
       const hit = sweepCircleSegment(ball.p, d, ball.r, s.a, s.b);
       if (hit && (!best || hit.toi < best.toi)){ best = hit; best.surface = s; }
+    }
+    for (const a of arcRegistry){
+      const hit = sweepCircleArc(ball.p, d, ball.r, a.c, a.R, a.a0, a.a1, a.outward);
+      if (hit && (!best || hit.toi < best.toi)){ best = hit; best.surface = a; }
     }
     if (!best){
       ball.p.x += d.x; ball.p.y += d.y;
@@ -161,6 +170,13 @@ function buildTable(){
   addSegment({x:DRAIN_RIGHT, y:CONFIG.H}, {x:CONFIG.W, y:CONFIG.H});
   // Shooter lane divider (the one-way gate is added in Task 6)
   addSegment({x:SHOOTER_X, y:24}, {x:SHOOTER_X, y:CONFIG.H-40});
+
+  // Left outlane return: arc centered at (135, 700) radius 45, from angle pi to 1.5pi (top-left quadrant of the circle)
+  addArc({x:135, y:700}, 45, Math.PI, 1.5*Math.PI, { outward:false, restitution:0.4 });
+  // Right outlane return
+  addArc({x:285, y:700}, 45, 1.5*Math.PI, 2*Math.PI, { outward:false, restitution:0.4 });
+  // Curved ceiling
+  addArc({x:CONFIG.W/2, y:24}, 240, Math.PI, 2*Math.PI, { outward:false, restitution:0.6 });
 }
 
 buildTable();
