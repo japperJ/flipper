@@ -501,6 +501,41 @@ function render(){
   if (shake > 0){
     ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake);
   }
+  // Walls (segments)
+  ctx.lineCap = 'round';
+  for (const s of segments){
+    if (s.enabled === false) continue;
+    if (s.kind === 'sling') continue; // rendered separately below
+    ctx.strokeStyle = '#6cf';
+    ctx.shadowColor = '#3af';
+    ctx.shadowBlur = 8;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(s.a.x, s.a.y);
+    ctx.lineTo(s.b.x, s.b.y);
+    ctx.stroke();
+  }
+  ctx.shadowBlur = 0;
+  // Arcs (outlane guides)
+  for (const ar of arcRegistry){
+    ctx.strokeStyle = '#6cf';
+    ctx.shadowColor = '#3af';
+    ctx.shadowBlur = 8;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(ar.c.x, ar.c.y, ar.R, ar.a0, ar.a1);
+    ctx.stroke();
+  }
+  ctx.shadowBlur = 0;
+  // Drain gap indicator
+  ctx.strokeStyle = 'rgba(255, 60, 90, 0.5)';
+  ctx.setLineDash([4, 4]);
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(DRAIN_LEFT, CONFIG.H - 1);
+  ctx.lineTo(DRAIN_RIGHT, CONFIG.H - 1);
+  ctx.stroke();
+  ctx.setLineDash([]);
   for (const f of [flippers.L, flippers.R]){
     const tip = flipperTip(f);
     ctx.strokeStyle = '#fd5';
