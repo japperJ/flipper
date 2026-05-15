@@ -310,8 +310,11 @@ function physicsStep(dt){
       if (sl){
         const speed = Math.hypot(ball.v.x, ball.v.y);
         const boost = Math.max(speed * (sl.gain - 1), 250);
-        ball.v.x += sl.normal.x * boost;
-        ball.v.y += sl.normal.y * boost;
+        // Use the collision normal (always points away from the surface, toward
+        // the ball) so the boost reliably pushes the ball off the sling instead
+        // of into it.
+        ball.v.x += best.normal.x * boost;
+        ball.v.y += best.normal.y * boost;
         sl.flash = 0.15;
         state.score += sl.value * state.mult;
         registerScoreEvent();
