@@ -339,11 +339,11 @@ function buildTable(){
   addSegment({x:0,         y:CONFIG.H}, {x:DRAIN_LEFT, y:CONFIG.H});
   addSegment({x:DRAIN_RIGHT, y:CONFIG.H}, {x:CONFIG.W, y:CONFIG.H});
   // Shooter lane divider runs from the deflector base down to the inlane bend.
-  addSegment({x:SHOOTER_X, y:90}, {x:SHOOTER_X, y:CONFIG.H-40});
-  // Launch deflector: diagonal closing the top of the shooter lane so a launched ball
-  // is thrown leftward into the playfield instead of bouncing back down. It also acts
-  // as the one-way "lid" — once the ball clears it, geometry prevents re-entry.
-  addSegment({x:SHOOTER_X, y:24}, {x:CONFIG.W, y:90}, { restitution: 0.85 });
+  addSegment({x:SHOOTER_X, y:120}, {x:SHOOTER_X, y:CONFIG.H-40});
+  // Launch deflector: steep diagonal at the top of the shooter lane. A fast launched
+  // ball reflects up-and-left and arcs across the top of the playfield before falling
+  // down on the left side — classic launch-lane "around the top" trajectory.
+  addSegment({x:SHOOTER_X, y:24}, {x:CONFIG.W, y:120}, { restitution: 0.92 });
 
   // Left outlane return: arc centered at (135, 700) radius 45, from angle pi to 1.5pi (top-left quadrant of the circle)
   addArc({x:135, y:700}, 45, Math.PI, 1.5*Math.PI, { outward:false, restitution:0.4 });
