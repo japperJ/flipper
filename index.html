@@ -105,7 +105,45 @@ function sweepCircleArc(p0, d, r, c, R, a0, a1, outward=true){
 
 // ============ 3. PHYSICS ============
 const ball = { p:{x:400, y:680}, v:{x:0, y:0}, r: CONFIG.BALL_R };
-function physicsStep(dt){ /* TODO Task 3 */ }
+
+const segments = []; // { a, b, restitution, friction, kind }
+function addSegment(a, b, opts={}){
+  segments.push({ a, b, restitution: opts.restitution ?? 0.55, friction: opts.friction ?? 0.02, kind: opts.kind ?? 'wall' });
+}
+
+function physicsStep(dt){
+  // Integrate forces
+  ball.v.y += CONFIG.GRAVITY * dt;
+  const drag = Math.pow(CONFIG.DRAG_PER_SEC, dt * 240);
+  ball.v.x *= drag; ball.v.y *= drag;
+
+  let remaining = 1.0;
+  for (let iter = 0; iter < 6 && remaining > 1e-4; iter++){
+    const d = { x: ball.v.x * dt * remaining, y: ball.v.y * dt * remaining };
+    let best = null;
+    for (const s of segments){
+      const hit = sweepCircleSegment(ball.p, d, ball.r, s.a, s.b);
+      if (hit && (!best || hit.toi < best.toi)){ best = hit; best.surface = s; }
+    }
+    if (!best){
+      ball.p.x += d.x; ball.p.y += d.y;
+      remaining = 0;
+      break;
+    }
+    const eps = 1e-3;
+    ball.p.x += d.x * Math.max(0, best.toi - eps);
+    ball.p.y += d.y * Math.max(0, best.toi - eps);
+    const e = best.surface.restitution;
+    const vn = ball.v.x * best.normal.x + ball.v.y * best.normal.y;
+    const restThreshold = CONFIG.GRAVITY * dt * 2;
+    const factor = (-vn < restThreshold) ? 1.0 : (1 + e);
+    ball.v.x -= factor * vn * best.normal.x;
+    ball.v.y -= factor * vn * best.normal.y;
+    ball.p.x += best.normal.x * 0.01;
+    ball.p.y += best.normal.y * 0.01;
+    remaining *= (1 - best.toi);
+  }
+}
 
 // ============ 4. TABLE ============
 const walls = []; const arcs = []; const bumpers = []; const slings = []; const drops = [];
@@ -173,13 +211,14 @@ window.__test = {
   get ball(){ return ball; },
   get state(){ return state; },
   CONFIG,
-  step(n=1){ for(let i=0;i<n;i++) physicsStep(CONFIG.FIXED_DT); render(); },
+  step(n=1){ for(let i=0;i<n*CONFIG.MAX_SUBSTEPS;i++) physicsStep(CONFIG.FIXED_DT); render(); },
   pause(){ paused = true; },
   resume(){ paused = false; },
   place(x,y,vx=0,vy=0){ ball.p={x,y}; ball.v={x:vx,y:vy}; },
   press(key){ const e = new KeyboardEvent('keydown',{key}); window.dispatchEvent(e); },
   release(key){ const e = new KeyboardEvent('keyup',{key}); window.dispatchEvent(e); },
   _math: { sweepCircleSegment, sweepCircleEnd, sweepCircleArc },
+  _addTempFloor(x1,y1,x2,y2){ addSegment({x:x1,y:y1},{x:x2,y:y2}); },
 };
 </script>
 </body>

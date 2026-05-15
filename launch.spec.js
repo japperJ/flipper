@@ -30,3 +30,19 @@ test('math: sweepCircleSegment returns earliest TOI and normal', async ({ page }
   expect(r.toi).toBeLessThan(1);
   expect(r.normal.x).toBeCloseTo(-1, 2);
 });
+
+test('physics: ball falls under gravity and bounces off floor', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.place(210, 100, 0, 0);
+    window.__test._addTempFloor(60, 700, 360, 700);
+    const before = { ...window.__test.ball.p };
+    for (let i = 0; i < 240; i++) window.__test.step(1);
+    const after = { ...window.__test.ball.p, vy: window.__test.ball.v.y };
+    return { before, after };
+  });
+  expect(r.after.y).toBeGreaterThan(r.before.y);
+  expect(r.after.y).toBeLessThan(700);
+  expect(r.after.vy).toBeLessThanOrEqual(0);
+});
