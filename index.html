@@ -160,6 +160,11 @@ function restartGame(){
   state.dropCycles = 0;
   state.saverUntil = performance.now()/1000 + 5;
   state.phase = 'ready';
+  state.kickback = true;
+  state.kickbackFlash = 0;
+  state.bumperHits = 0;
+  floatTexts.length = 0;
+  for (const bp of bumperList){ bp.hits = 0; bp.flash = 0; }
   for (const dp of dropList){ dp.down = false; dp.downUntil = 0; }
   serveBall();
 }
@@ -185,8 +190,15 @@ function handleDrain(){
 function registerScoreEvent(){
   state.comboCount += 1;
   state.comboUntil = performance.now()/1000 + 1.5;
-  if (state.comboCount >= 4) state.mult = 2;
-  else if (state.comboCount >= 2) state.mult = 1;
+  const prev = state.mult;
+  if      (state.comboCount >= 12) state.mult = 4;
+  else if (state.comboCount >=  7) state.mult = 3;
+  else if (state.comboCount >=  3) state.mult = 2;
+  else                             state.mult = 1;
+  if (state.mult > prev){
+    const lbl = ['','','x2 COMBO!','x3 COMBO!','x4 MEGA COMBO!'];
+    spawnFloat(lbl[state.mult] || 'x'+state.mult, CONFIG.W/2, 380, '#fc4');
+  }
 }
 
 function physicsStep(dt){
@@ -276,10 +288,17 @@ function physicsStep(dt){
       ball.p.y += best.normal.y * 0.5;
       bp.flash = 0.45;
       bp.hits += 1;
+      state.bumperHits += 1;
       state.score += bp.value * state.mult;
       registerScoreEvent();
       spawnParticles(ball.p.x, ball.p.y, 22, '#5cf');
       shake = 10;
+      if (state.bumperHits % 25 === 0){
+        state.score += 10000 * state.mult;
+        spawnFloat('JACKPOT! +10000', CONFIG.W/2, 240, '#f5a');
+        spawnParticles(bp.c.x, bp.c.y, 40, '#f5a');
+        shake = 20;
+      }
       remaining *= (1 - best.toi);
       continue;
     }
@@ -301,7 +320,10 @@ function physicsStep(dt){
       spawnParticles(ball.p.x, ball.p.y, 8, '#fc4');
       if (dropList.every(d => d.down)){
         state.dropCycles += 1;
-        state.score += 1500 * state.mult;
+        const clearBonus = 1500 * Math.min(state.dropCycles, 6) * state.mult;
+        state.score += clearBonus;
+        spawnFloat('DROP BONUS +' + clearBonus, CONFIG.W/2, 340, '#fc4');
+        state.kickback = true; // rearm kickback on every bank clear
         for (const d of dropList){ d.down = false; d.downUntil = 0; }
       }
       remaining *= (1 - best.toi);
@@ -337,6 +359,16 @@ function physicsStep(dt){
     }
     remaining *= (1 - best.toi);
   }
+  // Kickback: fires the ball back out of the left outlane when armed.
+  if (state.kickback && ball.p.x > 2 && ball.p.x < 30 && ball.p.y > 550 && ball.p.y < 700){
+    ball.v.x = 420;
+    ball.v.y = -480;
+    state.kickback = false;
+    state.kickbackFlash = 0.8;
+    spawnParticles(ball.p.x, ball.p.y, 24, '#0ff');
+    spawnFloat('KICKBACK!', 80, 555, '#0ff');
+    shake = 12;
+  }
   handleDrain();
 }
 
@@ -364,21 +396,29 @@ function buildTable(){
   // down on the left side — classic launch-lane "around the top" trajectory.
   addSegment({x:SHOOTER_X, y:24}, {x:CONFIG.W, y:120}, { restitution: 0.92 });
 
-  // Outlane separators: narrow the gap between each slingshot and the side wall
-  // so the ball can't just freely drop down the outer channel. Each is a
-  // near-vertical rail forming the inner edge of a thin outlane that still
-  // lets the ball drain on the outside, but funnels most balls back toward
-  // the flipper.
-  addSegment({x:30,  y:560}, {x:25,  y:680});
-  addSegment({x:390, y:560}, {x:395, y:680});
+  // Outlane separators — sealed at the top by horizontal connectors so no ball
+  // can slip between the separator and the slingshot.
+  addSegment({x:32,  y:490}, {x:26,  y:668});
+  addSegment({x:388, y:490}, {x:394, y:668});
+  addSegment({x:55,  y:490}, {x:32,  y:490}); // left top connector
+  addSegment({x:365, y:490}, {x:388, y:490}); // right top connector
+  // Inlane guides: channel the ball from slingshot bottom toward each flipper.
+  addSegment({x:115, y:600}, {x:120, y:618});
+  addSegment({x:305, y:600}, {x:300, y:618});
+  // Mid-table guide rails — deflect balls up toward the bumper cluster.
+  addSegment({x:75,  y:440}, {x:130, y:468});
+  addSegment({x:345, y:440}, {x:290, y:468});
 
+  // Five bumpers: three-high plus two flanking for a tight cluster.
   addBumper({x:140, y:250}, 22, 1.7, 250);
   addBumper({x:210, y:200}, 22, 1.7, 250);
   addBumper({x:280, y:250}, 22, 1.7, 250);
+  addBumper({x:100, y:220}, 20, 1.7, 250); // flanking left
+  addBumper({x:320, y:220}, 20, 1.7, 250); // flanking right
 
-  // Slingshots: triangular guards above each flipper
-  addSling({x:65,  y:540}, {x:115, y:600}, 1.5, 50);
-  addSling({x:355, y:540}, {x:305, y:600}, 1.5, 50);
+  // Slingshots: extended upward for much wider coverage and stronger kick.
+  addSling({x:55,  y:490}, {x:115, y:600}, 1.65, 80);
+  addSling({x:365, y:490}, {x:305, y:600}, 1.65, 80);
 
   addDrop({x:170, y:350}, 24, 8, 200);
   addDrop({x:210, y:350}, 24, 8, 200);
@@ -465,7 +505,7 @@ function plungerStep(dt){
 }
 
 // ============ 7. SCORING ============
-const state = { phase:'ready', score:0, hi:0, balls:3, mult:1, saverUntil:0, drops:[false,false,false], dropCycles:0, comboCount:0, comboUntil:0 };
+const state = { phase:'ready', score:0, hi:0, balls:3, mult:1, saverUntil:0, drops:[false,false,false], dropCycles:0, comboCount:0, comboUntil:0, kickback:true, kickbackFlash:0, bumperHits:0 };
 
 // ============ 8. INPUT ============
 const input = { L:false, R:false, plunge:false };
@@ -485,7 +525,11 @@ window.addEventListener('keyup', e=>{
 // ============ 8b. FX ============
 const trail = [];
 const particles = [];
+const floatTexts = []; // {text,x,y,vx,vy,life,maxLife,color}
 let shake = 0;
+function spawnFloat(text, x, y, color='#fc4'){
+  floatTexts.push({text, x, y, vx:(Math.random()-0.5)*40, vy:-80, life:1.4, maxLife:1.4, color});
+}
 function spawnParticles(x, y, n, color){
   for (let i = 0; i < n; i++){
     const a = Math.random() * Math.PI * 2;
@@ -618,7 +662,25 @@ function render(){
     ctx.fillStyle = p.color;
     ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill();
   }
+  // Floating score/event texts
+  for (let i = floatTexts.length - 1; i >= 0; i--){
+    const ft = floatTexts[i];
+    ft.x += ft.vx * dtRender;
+    ft.y += ft.vy * dtRender;
+    ft.life -= dtRender;
+    if (ft.life <= 0){ floatTexts.splice(i, 1); continue; }
+    const fa = Math.min(1, ft.life / (ft.maxLife * 0.35));
+    ctx.globalAlpha = fa;
+    ctx.shadowColor = ft.color;
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = ft.color;
+    ctx.font = "bold 11px 'Press Start 2P', monospace";
+    ctx.textAlign = 'center';
+    ctx.fillText(ft.text, ft.x, ft.y);
+    ctx.shadowBlur = 0;
+  }
   ctx.globalAlpha = 1;
+  ctx.textAlign = 'start';
   ctx.restore();
   ctx.fillStyle = '#5cf';
   ctx.font = "10px 'Press Start 2P', monospace";
@@ -626,12 +688,28 @@ function render(){
   ctx.fillStyle = '#fff';
   ctx.fillText('SCORE ' + state.score.toString().padStart(7,'0'), 8, 36);
   ctx.fillText('BALLS ' + state.balls, 8, 50);
+  if (state.dropCycles > 0){
+    ctx.fillStyle = '#fc4';
+    ctx.fillText('BNK x' + state.dropCycles, 8, 64);
+  }
   ctx.fillStyle = state.mult > 1 ? '#fc4' : '#888';
   ctx.fillText('x' + state.mult, 380, 36);
   const nowSec = performance.now()/1000;
   if (state.saverUntil > nowSec){
     ctx.fillStyle = '#5f5';
     ctx.fillText('SAVER', 350, 50);
+  }
+  if (state.kickback){
+    ctx.fillStyle = '#0ff';
+    ctx.shadowColor = '#0ff'; ctx.shadowBlur = 6;
+    ctx.fillText('KBCK', 350, 65);
+    ctx.shadowBlur = 0;
+  } else if (state.kickbackFlash > 0){
+    ctx.globalAlpha = state.kickbackFlash / 0.8;
+    ctx.fillStyle = '#0ff';
+    ctx.fillText('KBCK', 350, 65);
+    ctx.globalAlpha = 1;
+    state.kickbackFlash = Math.max(0, state.kickbackFlash - 1/60);
   }
   if (state.phase === 'gameover'){
     ctx.fillStyle = 'rgba(0,0,0,0.7)';
