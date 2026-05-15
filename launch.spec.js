@@ -123,3 +123,17 @@ test('bumper: hit bumper deflects with min outward speed', async ({ page }) => {
   });
   expect(r).toBeGreaterThan(500);
 });
+
+
+test('drops: knocking all three resets bank and increments cycles', async ({ page }) => {
+  await page.goto(URL);
+  const cycles = await page.evaluate(() => {
+    window.__test.pause();
+    for (const targetX of [170, 210, 250]){
+      window.__test.place(targetX, 320, 0, 600);
+      for (let i = 0; i < 60; i++) window.__test.step(1);
+    }
+    return window.__test.state.dropCycles;
+  });
+  expect(cycles).toBeGreaterThanOrEqual(1);
+});
