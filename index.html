@@ -49,7 +49,19 @@ function sweepCircleSegment(p0, d, r, a, b){
   const vN = d.x*nx + d.y*ny; // signed motion along normal (negative = approaching)
   if (vN >= 0) return null;
   const toi = (dist0 - r) / (-vN);
-  if (toi < 0 || toi > 1) return null;
+  if (toi > 1) return null;
+  // toi may be slightly negative when the ball already overlaps the line of the
+  // segment (e.g. it just shaved past an endpoint corner the previous substep).
+  // We still need to consider endpoints in that case — otherwise the ball can
+  // tunnel through near the corner of a short segment like a slingshot.
+  if (toi < 0){
+    // If the projected contact point actually lies inside the segment body we
+    // treat this as a real overlap and resolve at toi=0 with the line normal.
+    const cxOv = p0.x, cyOv = p0.y;
+    const tOv = ((cxOv-a.x)*sx + (cyOv-a.y)*sy) / segLen2;
+    if (tOv >= 0 && tOv <= 1) return { toi: 0, normal:{x:nx,y:ny} };
+    return sweepCircleEnd(p0,d,r,a) ?? sweepCircleEnd(p0,d,r,b);
+  }
   // Contact point along segment axis
   const cx = p0.x + d.x*toi, cy = p0.y + d.y*toi;
   const t = ((cx-a.x)*sx + (cy-a.y)*sy) / segLen2;
