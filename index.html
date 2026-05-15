@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NEON PINBALL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;background:#0a0612;color:#fff;font-family:'Press Start 2P',monospace;display:flex;justify-content:center;align-items:center;min-height:100vh;}
+  canvas{background:#0a0612;box-shadow:0 0 40px #5cf3,0 0 80px #f3a3;display:block;image-rendering:pixelated;}
+</style>
+</head>
+<body>
+<canvas id="c" width="420" height="720"></canvas>
+<script type="module">
+// ============ 1. CONFIG ============
+const CONFIG = {
+  W: 420, H: 720, BALL_R: 11,
+  GRAVITY: 900, DRAG_PER_SEC: 0.9995,
+  FIXED_DT: 1/240, MAX_SUBSTEPS: 4,
+};
+
+// ============ 2. MATH ============
+const V = {
+  add:(a,b)=>({x:a.x+b.x,y:a.y+b.y}),
+  sub:(a,b)=>({x:a.x-b.x,y:a.y-b.y}),
+  mul:(a,s)=>({x:a.x*s,y:a.y*s}),
+  dot:(a,b)=>a.x*b.x+a.y*b.y,
+  len:a=>Math.hypot(a.x,a.y),
+  norm:a=>{const l=Math.hypot(a.x,a.y)||1;return{x:a.x/l,y:a.y/l};},
+  reflect:(v,n)=>{const d=v.x*n.x+v.y*n.y;return{x:v.x-2*d*n.x,y:v.y-2*d*n.y};},
+};
+const clamp=(v,lo,hi)=>v<lo?lo:v>hi?hi:v;
+
+// ============ 3. PHYSICS ============
+const ball = { p:{x:400, y:680}, v:{x:0, y:0}, r: CONFIG.BALL_R };
+function physicsStep(dt){ /* TODO Task 3 */ }
+
+// ============ 4. TABLE ============
+const walls = []; const arcs = []; const bumpers = []; const slings = []; const drops = [];
+function buildTable(){ /* TODO Task 5 */ }
+
+// ============ 5. FLIPPERS ============
+const flippers = { L: null, R: null };
+function buildFlippers(){ /* TODO Task 7 */ }
+
+// ============ 6. PLUNGER ============
+const plunger = { charge:0, charging:false };
+function plungerStep(dt){ /* TODO Task 6 */ }
+
+// ============ 7. SCORING ============
+const state = { phase:'ready', score:0, hi:0, balls:3, mult:1, saverUntil:0, drops:[false,false,false], dropCycles:0, comboCount:0, comboUntil:0 };
+
+// ============ 8. INPUT ============
+const input = { L:false, R:false, plunge:false };
+window.addEventListener('keydown', e=>{
+  if (e.key==='z' || e.key==='Z' || e.key==='ArrowLeft') input.L = true;
+  if (e.key==='/' || e.key==='ArrowRight') input.R = true;
+  if (e.key===' ') input.plunge = true;
+  if (e.key==='p' || e.key==='P') paused = !paused;
+});
+window.addEventListener('keyup', e=>{
+  if (e.key==='z' || e.key==='Z' || e.key==='ArrowLeft') input.L = false;
+  if (e.key==='/' || e.key==='ArrowRight') input.R = false;
+  if (e.key===' ') input.plunge = false;
+});
+
+// ============ 9. RENDER ============
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+function render(){
+  ctx.fillStyle = '#0a0612';
+  ctx.fillRect(0,0,CONFIG.W,CONFIG.H);
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(ball.p.x, ball.p.y, ball.r, 0, Math.PI*2); ctx.fill();
+}
+
+// ============ 10. LOOP ============
+let paused = false;
+let last = performance.now();
+let acc = 0;
+function frame(now){
+  const dt = Math.min(0.1, (now - last)/1000);
+  last = now;
+  if (!paused){
+    acc += dt;
+    let steps = 0;
+    while (acc >= CONFIG.FIXED_DT && steps < CONFIG.MAX_SUBSTEPS){
+      physicsStep(CONFIG.FIXED_DT);
+      acc -= CONFIG.FIXED_DT;
+      steps++;
+    }
+    if (acc > CONFIG.MAX_SUBSTEPS * CONFIG.FIXED_DT) acc = 0;
+  }
+  render();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// ============ 11. TEST HOOK ============
+window.__test = {
+  get ball(){ return ball; },
+  get state(){ return state; },
+  CONFIG,
+  step(n=1){ for(let i=0;i<n;i++) physicsStep(CONFIG.FIXED_DT); render(); },
+  pause(){ paused = true; },
+  resume(){ paused = false; },
+  place(x,y,vx=0,vy=0){ ball.p={x,y}; ball.v={x:vx,y:vy}; },
+  press(key){ const e = new KeyboardEvent('keydown',{key}); window.dispatchEvent(e); },
+  release(key){ const e = new KeyboardEvent('keyup',{key}); window.dispatchEvent(e); },
+};
+</script>
+</body>
+</html>
