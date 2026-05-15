@@ -102,9 +102,25 @@ function sweepCircleArc(p0, d, r, c, R, a0, a1, outward=true){
   const t = outward
     ? (-B - Math.sqrt(disc)) / (2*A)
     : (-B + Math.sqrt(disc)) / (2*A);
-  if (t < 0 || t > 1) return null;
+  const dist0 = Math.hypot(fx, fy);
+  if (t < 0){
+    if (dist0 > target + 1e-6) return null;
+    let nx = fx, ny = fy;
+    if (dist0 < 1e-6){ nx = 0; ny = -1; }
+    else { nx /= dist0; ny /= dist0; }
+    if (!outward){ nx = -nx; ny = -ny; }
+    return { toi:0, normal:{x:nx,y:ny} };
+  }
+  if (t > 1) return null;
   const cx = p0.x + d.x*t, cy = p0.y + d.y*t;
   const ang = Math.atan2(cy - c.y, cx - c.x);
+  const fullCircle = Math.abs(Math.abs(a1 - a0) - 2*Math.PI) < 1e-6;
+  if (fullCircle){
+    let nx = (cx - c.x), ny = (cy - c.y);
+    const nl = Math.hypot(nx,ny)||1; nx/=nl; ny/=nl;
+    if (!outward){ nx=-nx; ny=-ny; }
+    return { toi:t, normal:{x:nx,y:ny} };
+  }
   const norm = a => { a = a % (2*Math.PI); return a < 0 ? a + 2*Math.PI : a; };
   const A0 = norm(a0), A1 = norm(a1), AN = norm(ang);
   const inArc = A0 <= A1 ? (AN >= A0 && AN <= A1) : (AN >= A0 || AN <= A1);
@@ -163,6 +179,9 @@ function restartGame(){
   state.kickback = true;
   state.kickbackFlash = 0;
   state.bumperHits = 0;
+  state.superBumpersUntil = 0;
+  state.bumperChainCount = 0;
+  state.bumperChainUntil = 0;
   floatTexts.length = 0;
   for (const bp of bumperList){ bp.hits = 0; bp.flash = 0; }
   for (const dp of dropList){ dp.down = false; dp.downUntil = 0; }
@@ -198,6 +217,31 @@ function registerScoreEvent(){
   if (state.mult > prev){
     const lbl = ['','','x2 COMBO!','x3 COMBO!','x4 MEGA COMBO!'];
     spawnFloat(lbl[state.mult] || 'x'+state.mult, CONFIG.W/2, 380, '#fc4');
+  }
+}
+
+function bumperSuperActive(nowSec = performance.now()/1000){
+  return state.superBumpersUntil > nowSec;
+}
+
+function registerBumperHit(bp, nowSec){
+  bp.flash = 0.45;
+  bp.hits += 1;
+  state.bumperHits += 1;
+  if (state.bumperChainUntil && nowSec > state.bumperChainUntil) state.bumperChainCount = 0;
+  state.bumperChainCount += 1;
+  state.bumperChainUntil = nowSec + 2.2;
+  for (const other of bumperList){
+    if (other === bp) continue;
+    const dist = Math.hypot(other.c.x - bp.c.x, other.c.y - bp.c.y);
+    if (dist <= 120) other.flash = Math.max(other.flash, 0.22);
+  }
+  if (state.bumperChainCount >= 3 && !bumperSuperActive(nowSec)){
+    state.superBumpersUntil = nowSec + 8;
+    state.bumperChainCount = 0;
+    spawnFloat('SUPER BUMPERS!', CONFIG.W/2, 286, '#0ff');
+    spawnParticles(CONFIG.W/2, 250, 36, '#0ff');
+    shake = Math.max(shake, 16);
   }
 }
 
@@ -279,20 +323,21 @@ function physicsStep(dt){
       const eps = 1e-3;
       ball.p.x += d.x * Math.max(0, best.toi - eps);
       ball.p.y += d.y * Math.max(0, best.toi - eps);
+      const superBumpers = bumperSuperActive(nowSec);
       const speed = Math.hypot(ball.v.x, ball.v.y);
       const inSpeed = Math.max(speed, 400);
-      const outSpeed = Math.max(inSpeed * bp.gain, 600);
+      const outSpeed = Math.max(inSpeed * (bp.gain + (superBumpers ? 0.35 : 0)), superBumpers ? 780 : 600);
       ball.v.x = best.normal.x * outSpeed;
       ball.v.y = best.normal.y * outSpeed;
       ball.p.x += best.normal.x * 0.5;
       ball.p.y += best.normal.y * 0.5;
-      bp.flash = 0.45;
-      bp.hits += 1;
-      state.bumperHits += 1;
-      state.score += bp.value * state.mult;
+      registerBumperHit(bp, nowSec);
+      const bumperValue = bp.value + (superBumpers ? 350 : 0);
+      state.score += bumperValue * state.mult;
       registerScoreEvent();
-      spawnParticles(ball.p.x, ball.p.y, 22, '#5cf');
-      shake = 10;
+      spawnParticles(ball.p.x, ball.p.y, superBumpers ? 30 : 22, superBumpers ? '#0ff' : '#5cf');
+      if (superBumpers) spawnFloat('SUPER +' + (bumperValue * state.mult), bp.c.x, bp.c.y - 26, '#0ff');
+      shake = superBumpers ? 14 : 10;
       if (state.bumperHits % 25 === 0){
         state.score += 10000 * state.mult;
         spawnFloat('JACKPOT! +10000', CONFIG.W/2, 240, '#f5a');
@@ -408,7 +453,6 @@ function buildTable(){
   // Mid-table guide rails — deflect balls up toward the bumper cluster.
   addSegment({x:75,  y:440}, {x:130, y:468});
   addSegment({x:345, y:440}, {x:290, y:468});
-
   // Five bumpers: three-high plus two flanking for a tight cluster.
   addBumper({x:140, y:250}, 22, 1.7, 250);
   addBumper({x:210, y:200}, 22, 1.7, 250);
@@ -505,7 +549,7 @@ function plungerStep(dt){
 }
 
 // ============ 7. SCORING ============
-const state = { phase:'ready', score:0, hi:0, balls:3, mult:1, saverUntil:0, drops:[false,false,false], dropCycles:0, comboCount:0, comboUntil:0, kickback:true, kickbackFlash:0, bumperHits:0 };
+const state = { phase:'ready', score:0, hi:0, balls:3, mult:1, saverUntil:0, drops:[false,false,false], dropCycles:0, comboCount:0, comboUntil:0, kickback:true, kickbackFlash:0, bumperHits:0, superBumpersUntil:0, bumperChainCount:0, bumperChainUntil:0 };
 
 // ============ 8. INPUT ============
 const input = { L:false, R:false, plunge:false };
@@ -549,6 +593,8 @@ const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 function render(){
   const dtRender = 1/60;
+  const nowSec = performance.now()/1000;
+  const superBumpers = bumperSuperActive(nowSec);
   trail.push({ x: ball.p.x, y: ball.p.y });
   if (trail.length > 12) trail.shift();
   for (let i = particles.length - 1; i >= 0; i--){
@@ -619,9 +665,20 @@ function render(){
       ctx.stroke();
       ctx.restore();
     }
-    ctx.fillStyle = bp.flash > 0 ? '#fff' : '#5cf';
-    ctx.shadowColor = '#5cf';
-    ctx.shadowBlur = bp.flash > 0 ? 24 : 12;
+    if (superBumpers){
+      const pulse = 0.5 + 0.5*Math.sin(performance.now()/120 + bp.c.x*0.02);
+      ctx.save();
+      ctx.globalAlpha = 0.22 + pulse * 0.2;
+      ctx.strokeStyle = '#0ff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(bp.c.x, bp.c.y, bp.r + 8 + pulse * 8, 0, 2*Math.PI);
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.fillStyle = bp.flash > 0 ? '#fff' : (superBumpers ? '#9ff' : '#5cf');
+    ctx.shadowColor = superBumpers ? '#0ff' : '#5cf';
+    ctx.shadowBlur = bp.flash > 0 ? 24 : (superBumpers ? 20 : 12);
     ctx.beginPath(); ctx.arc(bp.c.x, bp.c.y, bp.r, 0, 2*Math.PI); ctx.fill();
     ctx.shadowBlur = 0;
     // Show the per-bumper hit counter so the player sees these have a purpose.
@@ -694,7 +751,6 @@ function render(){
   }
   ctx.fillStyle = state.mult > 1 ? '#fc4' : '#888';
   ctx.fillText('x' + state.mult, 380, 36);
-  const nowSec = performance.now()/1000;
   if (state.saverUntil > nowSec){
     ctx.fillStyle = '#5f5';
     ctx.fillText('SAVER', 350, 50);
@@ -710,6 +766,15 @@ function render(){
     ctx.fillText('KBCK', 350, 65);
     ctx.globalAlpha = 1;
     state.kickbackFlash = Math.max(0, state.kickbackFlash - 1/60);
+  }
+  if (superBumpers){
+    ctx.fillStyle = '#0ff';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = '#0ff';
+    ctx.shadowBlur = 8;
+    ctx.fillText('SUPER BUMPERS', CONFIG.W/2, 64);
+    ctx.shadowBlur = 0;
+    ctx.textAlign = 'start';
   }
   if (state.phase === 'gameover'){
     ctx.fillStyle = 'rgba(0,0,0,0.7)';
@@ -752,6 +817,7 @@ requestAnimationFrame(frame);
 window.__test = {
   get ball(){ return ball; },
   get state(){ return state; },
+  get bumpers(){ return bumperList; },
   CONFIG,
   step(n=1){ for(let i=0;i<n*CONFIG.MAX_SUBSTEPS;i++) physicsStep(CONFIG.FIXED_DT); render(); },
   pause(){ paused = true; },

@@ -35,8 +35,8 @@ test('physics: ball falls under gravity and bounces off floor', async ({ page })
   await page.goto(URL);
   const r = await page.evaluate(() => {
     window.__test.pause();
-    window.__test.place(210, 100, 0, 0);
-    window.__test._addTempFloor(60, 700, 360, 700);
+    window.__test.place(48, 100, 0, 0);
+    window.__test._addTempFloor(20, 700, 360, 700);
     const before = { ...window.__test.ball.p };
     for (let i = 0; i < 240; i++) window.__test.step(1);
     const after = { ...window.__test.ball.p, vy: window.__test.ball.v.y };
@@ -126,6 +126,36 @@ test('bumper: hit bumper deflects with min outward speed', async ({ page }) => {
     return Math.max(...speeds);
   });
   expect(r).toBeGreaterThan(500);
+});
+
+test('bumpers: repeated hits activate super bumper mode', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.restart();
+    for (let hit = 0; hit < 3; hit++){
+      window.__test.place(210, 150, 0, 480);
+      for (let i = 0; i < 70; i++) window.__test.step(1);
+    }
+    return {
+      superBumpersUntil: window.__test.state.superBumpersUntil,
+      score: window.__test.state.score,
+    };
+  });
+  expect(r.superBumpersUntil).toBeGreaterThan(0);
+  expect(r.score).toBeGreaterThanOrEqual(750);
+});
+
+test('bumpers: one hit energizes nearby bumpers too', async ({ page }) => {
+  await page.goto(URL);
+  const flashes = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.restart();
+    window.__test.place(210, 150, 0, 480);
+    for (let i = 0; i < 28; i++) window.__test.step(1);
+    return window.__test.bumpers.map(bp => bp.flash);
+  });
+  expect(flashes.filter(v => v > 0).length).toBeGreaterThanOrEqual(3);
 });
 
 
