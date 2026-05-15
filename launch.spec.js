@@ -75,3 +75,22 @@ test('outlanes: ball entering left outlane returns toward inlane', async ({ page
   });
   expect(ok).toBe(true);
 });
+
+test('plunger: hold + release moves ball up past the gate', async ({ page }) => {
+  await page.goto(URL);
+  await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.place(400, 680, 0, 0);
+    window.__test.plungerCharge(1.0);
+    window.__test.plungerRelease();
+  });
+  const out = await page.evaluate(() => {
+    let crossedGate = false;
+    for (let i = 0; i < 240*2; i++){
+      window.__test.step(1);
+      if (window.__test.ball.p.y < 200) crossedGate = true;
+    }
+    return crossedGate;
+  });
+  expect(out).toBe(true);
+});
