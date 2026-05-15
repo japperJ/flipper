@@ -129,8 +129,8 @@ function addArc(c, R, a0, a1, opts={}){
   arcRegistry.push({ c, R, a0, a1, outward: opts.outward ?? false, restitution: opts.restitution ?? 0.55 });
 }
 
-const bumperList = []; // { c, r, gain, value, flash }
-function addBumper(c, r, gain=1.6, value=100){ bumperList.push({c, r, gain, value, flash:0}); }
+const bumperList = []; // { c, r, gain, value, flash, hits }
+function addBumper(c, r, gain=1.6, value=100){ bumperList.push({c, r, gain, value, flash:0, hits:0}); }
 
 const slingList = []; // { a, b, normal, gain, value, flash }
 function addSling(a, b, gain=1.5, value=50){
@@ -274,11 +274,12 @@ function physicsStep(dt){
       ball.v.y = best.normal.y * outSpeed;
       ball.p.x += best.normal.x * 0.5;
       ball.p.y += best.normal.y * 0.5;
-      bp.flash = 0.15;
+      bp.flash = 0.45;
+      bp.hits += 1;
       state.score += bp.value * state.mult;
       registerScoreEvent();
-      spawnParticles(ball.p.x, ball.p.y, 14, '#5cf');
-      shake = 8;
+      spawnParticles(ball.p.x, ball.p.y, 22, '#5cf');
+      shake = 10;
       remaining *= (1 - best.toi);
       continue;
     }
@@ -371,9 +372,9 @@ function buildTable(){
   addSegment({x:30,  y:560}, {x:25,  y:680});
   addSegment({x:390, y:560}, {x:395, y:680});
 
-  addBumper({x:140, y:250}, 20, 1.6, 100);
-  addBumper({x:210, y:200}, 20, 1.6, 100);
-  addBumper({x:280, y:250}, 20, 1.6, 100);
+  addBumper({x:140, y:250}, 22, 1.7, 250);
+  addBumper({x:210, y:200}, 22, 1.7, 250);
+  addBumper({x:280, y:250}, 22, 1.7, 250);
 
   // Slingshots: triangular guards above each flipper
   addSling({x:65,  y:540}, {x:115, y:600}, 1.5, 50);
@@ -562,8 +563,29 @@ function render(){
     ctx.beginPath(); ctx.moveTo(f.pivot.x,f.pivot.y); ctx.lineTo(tip.x,tip.y); ctx.stroke();
   }
   for (const bp of bumperList){
+    // Expanding ring when recently hit so the player clearly sees the bumper fire.
+    if (bp.flash > 0){
+      const t = 1 - (bp.flash / 0.45); // 0..1 over the flash lifetime
+      ctx.save();
+      ctx.globalAlpha = 1 - t;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(bp.c.x, bp.c.y, bp.r + t * 22, 0, 2*Math.PI);
+      ctx.stroke();
+      ctx.restore();
+    }
     ctx.fillStyle = bp.flash > 0 ? '#fff' : '#5cf';
+    ctx.shadowColor = '#5cf';
+    ctx.shadowBlur = bp.flash > 0 ? 24 : 12;
     ctx.beginPath(); ctx.arc(bp.c.x, bp.c.y, bp.r, 0, 2*Math.PI); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Show the per-bumper hit counter so the player sees these have a purpose.
+    ctx.fillStyle = bp.flash > 0 ? '#06283c' : '#06283c';
+    ctx.font = 'bold 14px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(bp.hits), bp.c.x, bp.c.y + 1);
     bp.flash = Math.max(0, bp.flash - 1/60);
   }
   for (const sl of slingList){
