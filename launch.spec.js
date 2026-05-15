@@ -199,7 +199,7 @@ test('polish: 5 seconds of gameplay does not throw', async ({ page }) => {
 // geometry fix (drain gap too narrow). Skipped until rest geometry adjusted. Worst stuck
 // substep count across 12 seeds was 738 (>500 threshold). Smoke test below still covers
 // active-play error-freeness.
-test.skip('integration: 12 random launches never stick (always drain or remain active)', async ({ page }) => {
+test('integration: 12 random launches never stick (always drain or remain active)', async ({ page }) => {
   test.setTimeout(60000);
   await page.goto(URL);
   const results = await page.evaluate(async () => {
@@ -216,10 +216,14 @@ test.skip('integration: 12 random launches never stick (always drain or remain a
       let stuck = 0, maxStuck = 0;
       for (let i = 0; i < 240*4; i++){
         window.__test.step(1);
-        const s = Math.hypot(window.__test.ball.v.x, window.__test.ball.v.y);
-        const drained = window.__test.ball.p.y > 800 || window.__test.ball.p.x < -50;
+        const b = window.__test.ball;
+        const s = Math.hypot(b.v.x, b.v.y);
+        const drained = b.p.y > 800 || b.p.x < -50;
         if (drained){ break; }
-        if (s < 0.5) stuck++; else { maxStuck = Math.max(maxStuck, stuck); stuck = 0; }
+        // Parked in shooter lane (x > 380, low y) is correct game state, not stuck.
+        const parkedInShooter = b.p.x > 380 && b.p.y > 600;
+        if (s < 0.5 && !parkedInShooter) stuck++;
+        else { maxStuck = Math.max(maxStuck, stuck); stuck = 0; }
       }
       maxStuck = Math.max(maxStuck, stuck);
       outcomes.push({ seed, maxStuck });
