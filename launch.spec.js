@@ -382,6 +382,26 @@ test('cabinet menu: ESC hint is exposed and Escape toggles menu open/close', asy
   expect(r.hintAfterClose).toBe('PRESS ESC FOR CABINET MENU');
 });
 
+test('cabinet menu: exposes compact launch and flipper control help', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    const hasAccessor = typeof window.__test.getCabinetMenuControls === 'function';
+    return {
+      hasAccessor,
+      lines: hasAccessor ? window.__test.getCabinetMenuControls() : null,
+    };
+  });
+
+  expect(r.hasAccessor).toBe(true);
+  expect(r.lines).toEqual([
+    'SPACE  LAUNCH BALL',
+    'Z OR LEFT  LEFT FLIPPER',
+    '/ OR RIGHT  RIGHT FLIPPER',
+  ]);
+});
+
 test('theme/sound: settings persist across reload', async ({ page }) => {
   await page.goto(URL);
   await page.evaluate(() => {

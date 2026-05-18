@@ -36,6 +36,11 @@ const DEFAULT_THEME_ID = 'sunburst-classic';
 const THEME_STORAGE_KEY = 'flipper.themeId';
 const SOUND_STORAGE_KEY = 'flipper.soundEnabled';
 const CABINET_MENU_HINT = 'PRESS ESC FOR CABINET MENU';
+const CABINET_MENU_CONTROL_LINES = [
+  'SPACE  LAUNCH BALL',
+  'Z OR LEFT  LEFT FLIPPER',
+  '/ OR RIGHT  RIGHT FLIPPER',
+];
 
 const THEME_PACKS = {
   'sunburst-classic': {
@@ -177,6 +182,10 @@ function canApplyThemeFromMenu(){
 
 function getCabinetMenuIndicatorText(){
   return menu.open ? 'ESC CLOSES MENU' : CABINET_MENU_HINT;
+}
+
+function getCabinetMenuControlLines(){
+  return [...CABINET_MENU_CONTROL_LINES];
 }
 
 function applyThemeFromMenu(themeId){
@@ -1098,24 +1107,33 @@ function renderMenuOverlay(){
   if (!menu.open) return;
   const t = getActiveTheme();
   const p = t.palette;
+  const controlLines = getCabinetMenuControlLines();
   ctx.fillStyle = 'rgba(0,0,0,0.72)';
-  ctx.fillRect(20, 120, CONFIG.W - 40, 300);
+  ctx.fillRect(20, 112, CONFIG.W - 40, 360);
   ctx.strokeStyle = p.textAccent;
   ctx.lineWidth = 2;
-  ctx.strokeRect(20, 120, CONFIG.W - 40, 300);
+  ctx.strokeRect(20, 112, CONFIG.W - 40, 360);
   ctx.fillStyle = p.textPrimary;
   ctx.font = "10px 'Press Start 2P', monospace";
   ctx.textAlign = 'center';
-  ctx.fillText('CABINET MENU', CONFIG.W/2, 155);
+  ctx.fillText('CABINET MENU', CONFIG.W/2, 148);
   ctx.textAlign = 'left';
-  ctx.fillText('1 SUNBURST CLASSIC', 50, 200);
-  ctx.fillText('2 COSMIC WEDGE', 50, 228);
-  ctx.fillText('3 VOLCANO POP', 50, 256);
-  ctx.fillText('S SOUND: ' + (settings.soundEnabled ? 'ON' : 'OFF'), 50, 294);
-  ctx.fillText('ENTER APPLY/RESUME', 50, 332);
-  ctx.fillText('ESC CANCEL/RESUME', 50, 360);
+  ctx.fillText('1 SUNBURST CLASSIC', 50, 186);
+  ctx.fillText('2 COSMIC WEDGE', 50, 212);
+  ctx.fillText('3 VOLCANO POP', 50, 238);
+  ctx.fillText('S SOUND: ' + (settings.soundEnabled ? 'ON' : 'OFF'), 50, 268);
+  ctx.fillStyle = p.textAccent;
+  ctx.fillText('PLAY CONTROLS', 50, 306);
+  ctx.fillStyle = p.textPrimary;
+  ctx.font = "8px 'Press Start 2P', monospace";
+  ctx.fillText(controlLines[0], 50, 332);
+  ctx.fillText(controlLines[1], 50, 356);
+  ctx.fillText(controlLines[2], 50, 380);
+  ctx.font = "10px 'Press Start 2P', monospace";
+  ctx.fillText('ENTER APPLY/RESUME', 50, 414);
+  ctx.fillText('ESC CANCEL/RESUME', 50, 438);
   ctx.textAlign = 'center';
-  ctx.fillText('ACTIVE: ' + t.name.toUpperCase(), CONFIG.W/2, 390);
+  ctx.fillText('ACTIVE: ' + t.name.toUpperCase(), CONFIG.W/2, 456);
   ctx.textAlign = 'start';
 }
 
@@ -1164,6 +1182,7 @@ window.__test = {
   closeMenuAndResume(){ closeMenuAndResume(); },
   isMenuOpen(){ return menu.open; },
   getCabinetMenuHint(){ return getCabinetMenuIndicatorText(); },
+  getCabinetMenuControls(){ return getCabinetMenuControlLines(); },
   setThemeFromMenu(id){ return applyThemeFromMenu(id); },
   setSoundFromMenu(enabled){ return applySoundFromMenu(enabled); },
   getThemeId(){ return settings.themeId; },
