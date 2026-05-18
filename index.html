@@ -176,7 +176,6 @@ function canApplyThemeFromMenu(){
 
 function applyThemeFromMenu(themeId){
   if (!canApplyThemeFromMenu()) return false;
-  if (state.phase === 'playing') return false;
   return setThemeId(themeId);
 }
 

@@ -293,20 +293,28 @@ test('theme: can switch in menu but not during active play', async ({ page }) =>
   const r = await page.evaluate(() => {
     window.__test.pause();
     window.__test.openMenu();
-    window.__test.setThemeFromMenu('cosmic-wedge');
+    const changedInMenu = window.__test.setThemeFromMenu('cosmic-wedge');
     const inMenu = window.__test.getThemeId();
 
-    window.__test.openMenu();
+    // Paused overlay while phase is playing should still allow menu-driven changes.
     window.__test.forcePhase('playing');
-    const blocked = window.__test.setThemeFromMenu('volcano-pop');
-    const duringPlay = window.__test.getThemeId();
+    const changedWhilePausedOverlay = window.__test.setThemeFromMenu('volcano-pop');
+    const pausedOverlayTheme = window.__test.getThemeId();
 
-    return { inMenu, duringPlay, blocked };
+    // Active play without menu should reject theme changes.
+    window.__test.closeMenuAndResume();
+    const blockedDuringActivePlay = window.__test.setThemeFromMenu('sunburst-classic');
+    const duringPlayNoMenu = window.__test.getThemeId();
+
+    return { changedInMenu, inMenu, changedWhilePausedOverlay, pausedOverlayTheme, blockedDuringActivePlay, duringPlayNoMenu };
   });
 
+  expect(r.changedInMenu).toBe(true);
   expect(r.inMenu).toBe('cosmic-wedge');
-  expect(r.blocked).toBe(false);
-  expect(r.duringPlay).toBe('cosmic-wedge');
+  expect(r.changedWhilePausedOverlay).toBe(true);
+  expect(r.pausedOverlayTheme).toBe('volcano-pop');
+  expect(r.blockedDuringActivePlay).toBe(false);
+  expect(r.duringPlayNoMenu).toBe('volcano-pop');
 });
 
 test('theme/sound: settings persist across reload', async ({ page }) => {
