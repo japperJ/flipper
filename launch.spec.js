@@ -296,15 +296,16 @@ test('theme: can switch in menu but not during active play', async ({ page }) =>
     window.__test.setThemeFromMenu('cosmic-wedge');
     const inMenu = window.__test.getThemeId();
 
-    window.__test.closeMenuAndResume();
+    window.__test.openMenu();
     window.__test.forcePhase('playing');
-    window.__test.setThemeFromMenu('volcano-pop');
+    const blocked = window.__test.setThemeFromMenu('volcano-pop');
     const duringPlay = window.__test.getThemeId();
 
-    return { inMenu, duringPlay };
+    return { inMenu, duringPlay, blocked };
   });
 
   expect(r.inMenu).toBe('cosmic-wedge');
+  expect(r.blocked).toBe(false);
   expect(r.duringPlay).toBe('cosmic-wedge');
 });
 
@@ -362,4 +363,32 @@ test('audio: sound off blocks event playback counter', async ({ page }) => {
   });
 
   expect(r.after).toBe(r.before);
+});
+
+test('theme: menu can apply all three theme packs', async ({ page }) => {
+  await page.goto(URL);
+  const ids = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setThemeFromMenu('sunburst-classic');
+    const one = window.__test.getThemeId();
+    window.__test.setThemeFromMenu('cosmic-wedge');
+    const two = window.__test.getThemeId();
+    window.__test.setThemeFromMenu('volcano-pop');
+    const three = window.__test.getThemeId();
+    return [one, two, three];
+  });
+
+  expect(ids).toEqual(['sunburst-classic', 'cosmic-wedge', 'volcano-pop']);
+});
+
+test('sound: invalid persisted value falls back to enabled', async ({ page }) => {
+  await page.goto(URL);
+  await page.evaluate(() => {
+    localStorage.setItem('flipper.soundEnabled', 'corrupt-value');
+  });
+
+  await page.reload();
+  const enabled = await page.evaluate(() => window.__test.isSoundEnabled());
+  expect(enabled).toBe(true);
 });

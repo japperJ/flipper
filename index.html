@@ -141,10 +141,11 @@ function loadSettings(){
   const rawSound = localStorage.getItem(SOUND_STORAGE_KEY);
 
   settings.themeId = isThemeIdValid(rawTheme) ? rawTheme : DEFAULT_THEME_ID;
-  settings.soundEnabled = rawSound === null ? true : rawSound === 'true';
+  const soundValid = rawSound === 'true' || rawSound === 'false';
+  settings.soundEnabled = soundValid ? rawSound === 'true' : true;
 
   if (!isThemeIdValid(rawTheme)) localStorage.setItem(THEME_STORAGE_KEY, settings.themeId);
-  if (rawSound === null) localStorage.setItem(SOUND_STORAGE_KEY, String(settings.soundEnabled));
+  if (!soundValid) localStorage.setItem(SOUND_STORAGE_KEY, String(settings.soundEnabled));
 }
 
 function setThemeId(nextId){
@@ -174,7 +175,7 @@ function canApplyThemeFromMenu(){
 }
 
 function applyThemeFromMenu(themeId){
-  if (!(menu.open && paused)) return false;
+  if (!canApplyThemeFromMenu()) return false;
   if (state.phase === 'playing') return false;
   return setThemeId(themeId);
 }
@@ -792,6 +793,7 @@ function enqueueLightEffect(type, payload={}){
   const theme = getActiveTheme();
   const recipe = theme.lights[type];
   if (!recipe) return;
+  if (lightEffects.length > 96) lightEffects.shift();
   lightEffects.push({
     x: payload.x ?? CONFIG.W/2,
     y: payload.y ?? CONFIG.H/2,
