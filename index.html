@@ -41,6 +41,11 @@ const CABINET_MENU_CONTROL_LINES = [
   'Z OR LEFT  LEFT FLIPPER',
   '/ OR RIGHT  RIGHT FLIPPER',
 ];
+const EXTRA_BALL_SCORE = 500000;
+const CABINET_MENU_RULE_LINES = [
+  'START WITH 3 BALLS',
+  '500000 SCORE  EXTRA BALL',
+];
 
 const THEME_PACKS = {
   'sunburst-classic': {
@@ -186,6 +191,10 @@ function getCabinetMenuIndicatorText(){
 
 function getCabinetMenuControlLines(){
   return [...CABINET_MENU_CONTROL_LINES];
+}
+
+function getCabinetMenuRuleLines(){
+  return [...CABINET_MENU_RULE_LINES];
 }
 
 function applyThemeFromMenu(themeId){
@@ -350,6 +359,7 @@ function restartGame(){
   state.superBumpersUntil = 0;
   state.bumperChainCount = 0;
   state.bumperChainUntil = 0;
+  state.extraBallAwarded = false;
   floatTexts.length = 0;
   for (const bp of bumperList){ bp.hits = 0; bp.flash = 0; }
   for (const dp of dropList){ dp.down = false; dp.downUntil = 0; }
@@ -388,6 +398,22 @@ function registerScoreEvent(){
     const lbl = ['','','x2 COMBO!','x3 COMBO!','x4 MEGA COMBO!'];
     spawnFloat(lbl[state.mult] || 'x'+state.mult, CONFIG.W/2, 380, '#fc4');
   }
+}
+
+function maybeAwardExtraBall(){
+  if (state.extraBallAwarded || state.score < EXTRA_BALL_SCORE) return false;
+  state.extraBallAwarded = true;
+  state.balls += 1;
+  spawnFloat('EXTRA BALL!', CONFIG.W/2, 320, '#5f5');
+  spawnParticles(CONFIG.W/2, 320, 26, '#5f5');
+  playThemeSound('ui_toggle');
+  shake = Math.max(shake, 10);
+  return true;
+}
+
+function applyScore(points){
+  state.score += points;
+  maybeAwardExtraBall();
 }
 
 function bumperSuperActive(nowSec = performance.now()/1000){
@@ -504,13 +530,13 @@ function physicsStep(dt){
       registerBumperHit(bp, nowSec);
       dispatchThemeEvent('bumper_hit', { x: ball.p.x, y: ball.p.y });
       const bumperValue = bp.value + (superBumpers ? 350 : 0);
-      state.score += bumperValue * state.mult;
+      applyScore(bumperValue * state.mult);
       registerScoreEvent();
       spawnParticles(ball.p.x, ball.p.y, superBumpers ? 30 : 22, superBumpers ? '#0ff' : '#5cf');
       if (superBumpers) spawnFloat('SUPER +' + (bumperValue * state.mult), bp.c.x, bp.c.y - 26, '#0ff');
       shake = superBumpers ? 14 : 10;
       if (state.bumperHits % 25 === 0){
-        state.score += 10000 * state.mult;
+        applyScore(10000 * state.mult);
         spawnFloat('JACKPOT! +10000', CONFIG.W/2, 240, '#f5a');
         spawnParticles(bp.c.x, bp.c.y, 40, '#f5a');
         dispatchThemeEvent('jackpot', { x: CONFIG.W/2, y: 240 });
@@ -532,14 +558,14 @@ function physicsStep(dt){
       ball.p.y += best.normal.y * 0.01;
       dp.down = true;
       dp.downUntil = performance.now()/1000 + 3.5;
-      state.score += dp.value * state.mult;
+      applyScore(dp.value * state.mult);
       registerScoreEvent();
       spawnParticles(ball.p.x, ball.p.y, 8, '#fc4');
       dispatchThemeEvent('drop_clear', { x: ball.p.x, y: ball.p.y });
       if (dropList.every(d => d.down)){
         state.dropCycles += 1;
         const clearBonus = 1500 * Math.min(state.dropCycles, 6) * state.mult;
-        state.score += clearBonus;
+        applyScore(clearBonus);
         spawnFloat('DROP BONUS +' + clearBonus, CONFIG.W/2, 340, '#fc4');
         state.kickback = true; // rearm kickback on every bank clear
         for (const d of dropList){ d.down = false; d.downUntil = 0; }
@@ -570,7 +596,7 @@ function physicsStep(dt){
         ball.v.y += best.normal.y * boost;
         sl.flash = 0.15;
         dispatchThemeEvent('sling_hit', { x: ball.p.x, y: ball.p.y });
-        state.score += sl.value * state.mult;
+        applyScore(sl.value * state.mult);
         registerScoreEvent();
         spawnParticles(ball.p.x, ball.p.y, 10, '#f3a');
         shake = 5;
@@ -726,7 +752,7 @@ function plungerStep(dt){
 }
 
 // ============ 7. SCORING ============
-const state = { phase:'ready', score:0, hi:0, balls:3, mult:1, saverUntil:0, drops:[false,false,false], dropCycles:0, comboCount:0, comboUntil:0, kickback:true, kickbackFlash:0, bumperHits:0, superBumpersUntil:0, bumperChainCount:0, bumperChainUntil:0 };
+const state = { phase:'ready', score:0, hi:0, balls:3, mult:1, saverUntil:0, drops:[false,false,false], dropCycles:0, comboCount:0, comboUntil:0, kickback:true, kickbackFlash:0, bumperHits:0, superBumpersUntil:0, bumperChainCount:0, bumperChainUntil:0, extraBallAwarded:false };
 
 loadSettings();
 
@@ -1108,32 +1134,38 @@ function renderMenuOverlay(){
   const t = getActiveTheme();
   const p = t.palette;
   const controlLines = getCabinetMenuControlLines();
+  const ruleLines = getCabinetMenuRuleLines();
   ctx.fillStyle = 'rgba(0,0,0,0.72)';
-  ctx.fillRect(20, 112, CONFIG.W - 40, 360);
+  ctx.fillRect(20, 104, CONFIG.W - 40, 400);
   ctx.strokeStyle = p.textAccent;
   ctx.lineWidth = 2;
-  ctx.strokeRect(20, 112, CONFIG.W - 40, 360);
+  ctx.strokeRect(20, 104, CONFIG.W - 40, 400);
   ctx.fillStyle = p.textPrimary;
   ctx.font = "10px 'Press Start 2P', monospace";
   ctx.textAlign = 'center';
-  ctx.fillText('CABINET MENU', CONFIG.W/2, 148);
+  ctx.fillText('CABINET MENU', CONFIG.W/2, 140);
   ctx.textAlign = 'left';
-  ctx.fillText('1 SUNBURST CLASSIC', 50, 186);
-  ctx.fillText('2 COSMIC WEDGE', 50, 212);
-  ctx.fillText('3 VOLCANO POP', 50, 238);
-  ctx.fillText('S SOUND: ' + (settings.soundEnabled ? 'ON' : 'OFF'), 50, 268);
+  ctx.fillText('1 SUNBURST CLASSIC', 50, 176);
+  ctx.fillText('2 COSMIC WEDGE', 50, 202);
+  ctx.fillText('3 VOLCANO POP', 50, 228);
+  ctx.fillText('S SOUND: ' + (settings.soundEnabled ? 'ON' : 'OFF'), 50, 258);
   ctx.fillStyle = p.textAccent;
-  ctx.fillText('PLAY CONTROLS', 50, 306);
+  ctx.fillText('PLAY CONTROLS', 50, 292);
   ctx.fillStyle = p.textPrimary;
   ctx.font = "8px 'Press Start 2P', monospace";
-  ctx.fillText(controlLines[0], 50, 332);
-  ctx.fillText(controlLines[1], 50, 356);
-  ctx.fillText(controlLines[2], 50, 380);
+  ctx.fillText(controlLines[0], 50, 318);
+  ctx.fillText(controlLines[1], 50, 340);
+  ctx.fillText(controlLines[2], 50, 362);
+  ctx.fillStyle = p.textAccent;
+  ctx.fillText('GAME RULES', 50, 392);
+  ctx.fillStyle = p.textPrimary;
+  ctx.fillText(ruleLines[0], 50, 418);
+  ctx.fillText(ruleLines[1], 50, 440);
   ctx.font = "10px 'Press Start 2P', monospace";
-  ctx.fillText('ENTER APPLY/RESUME', 50, 414);
-  ctx.fillText('ESC CANCEL/RESUME', 50, 438);
+  ctx.fillText('ENTER APPLY/RESUME', 50, 470);
+  ctx.fillText('ESC CANCEL/RESUME', 50, 492);
   ctx.textAlign = 'center';
-  ctx.fillText('ACTIVE: ' + t.name.toUpperCase(), CONFIG.W/2, 456);
+  ctx.fillText('ACTIVE: ' + t.name.toUpperCase(), CONFIG.W/2, 516);
   ctx.textAlign = 'start';
 }
 
@@ -1183,10 +1215,12 @@ window.__test = {
   isMenuOpen(){ return menu.open; },
   getCabinetMenuHint(){ return getCabinetMenuIndicatorText(); },
   getCabinetMenuControls(){ return getCabinetMenuControlLines(); },
+  getCabinetMenuRules(){ return getCabinetMenuRuleLines(); },
   setThemeFromMenu(id){ return applyThemeFromMenu(id); },
   setSoundFromMenu(enabled){ return applySoundFromMenu(enabled); },
   getThemeId(){ return settings.themeId; },
   isSoundEnabled(){ return settings.soundEnabled; },
+  addScore(points){ applyScore(points); },
   forcePhase(phase){ state.phase = phase; },
   dispatchThemeEvent(type, payload){ emitThemeEvent(type, payload); },
   getActiveLightEffectCount(){ return lightEffects.length; },

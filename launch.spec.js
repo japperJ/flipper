@@ -402,6 +402,76 @@ test('cabinet menu: exposes compact launch and flipper control help', async ({ p
   ]);
 });
 
+test('cabinet menu: explains starting balls and extra ball rule', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    const hasAccessor = typeof window.__test.getCabinetMenuRules === 'function';
+    return {
+      hasAccessor,
+      lines: hasAccessor ? window.__test.getCabinetMenuRules() : null,
+    };
+  });
+
+  expect(r.hasAccessor).toBe(true);
+  expect(r.lines).toEqual([
+    'START WITH 3 BALLS',
+    '500000 SCORE  EXTRA BALL',
+  ]);
+});
+
+test('scoring: reaching 500000 awards exactly one extra ball per game', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.restart();
+    const startBalls = window.__test.state.balls;
+    const hasAddScore = typeof window.__test.addScore === 'function';
+
+    if (hasAddScore) window.__test.addScore(499999);
+    const beforeThreshold = {
+      score: window.__test.state.score,
+      balls: window.__test.state.balls,
+      extraBallAwarded: window.__test.state.extraBallAwarded,
+    };
+
+    if (hasAddScore) window.__test.addScore(1);
+    const atThreshold = {
+      score: window.__test.state.score,
+      balls: window.__test.state.balls,
+      extraBallAwarded: window.__test.state.extraBallAwarded,
+    };
+
+    if (hasAddScore) window.__test.addScore(250000);
+    const afterMoreScore = {
+      score: window.__test.state.score,
+      balls: window.__test.state.balls,
+      extraBallAwarded: window.__test.state.extraBallAwarded,
+    };
+
+    window.__test.restart();
+    const afterRestart = {
+      balls: window.__test.state.balls,
+      extraBallAwarded: window.__test.state.extraBallAwarded,
+    };
+
+    return { hasAddScore, startBalls, beforeThreshold, atThreshold, afterMoreScore, afterRestart };
+  });
+
+  expect(r.hasAddScore).toBe(true);
+  expect(r.startBalls).toBe(3);
+  expect(r.beforeThreshold.score).toBe(499999);
+  expect(r.beforeThreshold.balls).toBe(3);
+  expect(r.beforeThreshold.extraBallAwarded).toBe(false);
+  expect(r.atThreshold.score).toBe(500000);
+  expect(r.atThreshold.balls).toBe(4);
+  expect(r.atThreshold.extraBallAwarded).toBe(true);
+  expect(r.afterMoreScore.balls).toBe(4);
+  expect(r.afterRestart.balls).toBe(3);
+  expect(r.afterRestart.extraBallAwarded).toBe(false);
+});
+
 test('theme/sound: settings persist across reload', async ({ page }) => {
   await page.goto(URL);
   await page.evaluate(() => {
