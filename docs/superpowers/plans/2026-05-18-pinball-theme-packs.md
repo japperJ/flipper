@@ -644,12 +644,43 @@ function applyThemeFromMenu(themeId){
 }
 ```
 
-- [ ] **Step 3: Update/adjust tests to use new hook names exactly**
+- [ ] **Step 3: Replace any draft tests with these exact hook-based versions**
 
 ```js
-// Ensure all new tests call:
-// openMenu(), setThemeFromMenu(), closeMenuAndResume(),
-// getThemeId(), isSoundEnabled(), getActiveLightEffectCount(), getAudioPlayCount()
+test('theme: can switch in menu but not during active play', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setThemeFromMenu('cosmic-wedge');
+    const inMenu = window.__test.getThemeId();
+
+    window.__test.closeMenuAndResume();
+    window.__test.forcePhase('playing');
+    window.__test.setThemeFromMenu('volcano-pop');
+    const duringPlay = window.__test.getThemeId();
+
+    return { inMenu, duringPlay };
+  });
+
+  expect(r.inMenu).toBe('cosmic-wedge');
+  expect(r.duringPlay).toBe('cosmic-wedge');
+});
+
+test('audio: sound off blocks event playback counter', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setSoundFromMenu(false);
+    const before = window.__test.getAudioPlayCount();
+    window.__test.dispatchThemeEvent('sling_hit', { x: 100, y: 500 });
+    const after = window.__test.getAudioPlayCount();
+    return { before, after };
+  });
+
+  expect(r.after).toBe(r.before);
+});
 ```
 
 - [ ] **Step 4: Run full test file**
