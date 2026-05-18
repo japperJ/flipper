@@ -317,6 +317,39 @@ test('theme: can switch in menu but not during active play', async ({ page }) =>
   expect(r.duringPlayNoMenu).toBe('volcano-pop');
 });
 
+test('cabinet menu: ESC hint is exposed and Escape toggles menu open/close', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    const initialHint = window.__test.getCabinetMenuHint();
+    const initiallyOpen = window.__test.isMenuOpen();
+
+    window.__test.press('Escape');
+    const openAfterEsc = window.__test.isMenuOpen();
+    const hintWhileOpen = window.__test.getCabinetMenuHint();
+
+    window.__test.press('Escape');
+    const openAfterSecondEsc = window.__test.isMenuOpen();
+    const hintAfterClose = window.__test.getCabinetMenuHint();
+
+    return {
+      initialHint,
+      initiallyOpen,
+      openAfterEsc,
+      hintWhileOpen,
+      openAfterSecondEsc,
+      hintAfterClose,
+    };
+  });
+
+  expect(r.initialHint).toBe('PRESS ESC FOR CABINET MENU');
+  expect(r.initiallyOpen).toBe(false);
+  expect(r.openAfterEsc).toBe(true);
+  expect(r.hintWhileOpen).toBe('ESC CLOSES MENU');
+  expect(r.openAfterSecondEsc).toBe(false);
+  expect(r.hintAfterClose).toBe('PRESS ESC FOR CABINET MENU');
+});
+
 test('theme/sound: settings persist across reload', async ({ page }) => {
   await page.goto(URL);
   await page.evaluate(() => {

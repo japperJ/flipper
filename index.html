@@ -35,6 +35,7 @@ const clamp=(v,lo,hi)=>v<lo?lo:v>hi?hi:v;
 const DEFAULT_THEME_ID = 'sunburst-classic';
 const THEME_STORAGE_KEY = 'flipper.themeId';
 const SOUND_STORAGE_KEY = 'flipper.soundEnabled';
+const CABINET_MENU_HINT = 'PRESS ESC FOR CABINET MENU';
 
 const THEME_PACKS = {
   'sunburst-classic': {
@@ -172,6 +173,10 @@ function closeMenuAndResume(){
 
 function canApplyThemeFromMenu(){
   return menu.open && paused;
+}
+
+function getCabinetMenuIndicatorText(){
+  return menu.open ? 'ESC CLOSES MENU' : CABINET_MENU_HINT;
 }
 
 function applyThemeFromMenu(themeId){
@@ -1008,31 +1013,39 @@ function render(){
   ctx.globalAlpha = 1;
   ctx.textAlign = 'start';
   ctx.restore();
+
+  // HUD panels keep text readable against rails/walls and avoid top-right crowding.
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+  ctx.fillRect(6, 6, 248, 78);
+  ctx.fillRect(300, 6, 114, 66);
+
   ctx.fillStyle = palette.textAccent;
   ctx.font = "10px 'Press Start 2P', monospace";
   ctx.fillText('NEON PINBALL', 8, 16);
   ctx.fillStyle = palette.textPrimary;
-  ctx.fillText('SCORE ' + state.score.toString().padStart(7,'0'), 8, 36);
-  ctx.fillText('BALLS ' + state.balls, 8, 50);
+  ctx.fillText('SCORE ' + state.score.toString().padStart(7,'0'), 8, 34);
+  ctx.fillText('BALLS ' + state.balls, 8, 48);
   if (state.dropCycles > 0){
     ctx.fillStyle = palette.insertOn;
-    ctx.fillText('BNK x' + state.dropCycles, 8, 64);
+    ctx.fillText('BNK x' + state.dropCycles, 8, 62);
   }
+  const hudRightX = 364;
+  ctx.textAlign = 'right';
   ctx.fillStyle = state.mult > 1 ? palette.insertOn : '#888';
-  ctx.fillText('x' + state.mult, 380, 36);
+  ctx.fillText('MULT x' + state.mult, hudRightX, 34);
   if (state.saverUntil > nowSec){
     ctx.fillStyle = '#5f5';
-    ctx.fillText('SAVER', 350, 50);
+    ctx.fillText('SAVER', hudRightX, 48);
   }
   if (state.kickback){
     ctx.fillStyle = palette.bumperGlow;
     ctx.shadowColor = palette.bumperGlow; ctx.shadowBlur = 6;
-    ctx.fillText('KBCK', 350, 65);
+    ctx.fillText('KBCK', hudRightX, 62);
     ctx.shadowBlur = 0;
   } else if (state.kickbackFlash > 0){
     ctx.globalAlpha = state.kickbackFlash / 0.8;
     ctx.fillStyle = palette.bumperGlow;
-    ctx.fillText('KBCK', 350, 65);
+    ctx.fillText('KBCK', hudRightX, 62);
     ctx.globalAlpha = 1;
     state.kickbackFlash = Math.max(0, state.kickbackFlash - 1/60);
   }
@@ -1060,7 +1073,20 @@ function render(){
 
   ctx.fillStyle = palette.textAccent;
   ctx.font = "8px 'Press Start 2P', monospace";
-  ctx.fillText(theme.name.toUpperCase(), 8, 78);
+  ctx.textAlign = 'start';
+  ctx.fillText(theme.name.toUpperCase(), 8, 76);
+
+  const cabinetHint = getCabinetMenuIndicatorText();
+  const hintY = CONFIG.H - 24;
+  ctx.fillStyle = palette.textPrimary;
+  ctx.font = "7px 'Press Start 2P', monospace";
+  ctx.textAlign = 'center';
+  const hintWidth = ctx.measureText(cabinetHint).width;
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillRect((CONFIG.W - hintWidth) / 2 - 6, hintY - 9, hintWidth + 12, 12);
+  ctx.fillStyle = palette.textPrimary;
+  ctx.fillText(cabinetHint, CONFIG.W/2, hintY);
+  ctx.textAlign = 'start';
 
   renderMenuOverlay();
 }
@@ -1133,6 +1159,8 @@ window.__test = {
   restart(){ restartGame(); },
   openMenu(){ openMenu(); },
   closeMenuAndResume(){ closeMenuAndResume(); },
+  isMenuOpen(){ return menu.open; },
+  getCabinetMenuHint(){ return getCabinetMenuIndicatorText(); },
   setThemeFromMenu(id){ return applyThemeFromMenu(id); },
   setSoundFromMenu(enabled){ return applySoundFromMenu(enabled); },
   getThemeId(){ return settings.themeId; },
