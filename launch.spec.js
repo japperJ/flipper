@@ -193,6 +193,38 @@ test('drain: ball falling out decrements balls and resets to shooter lane', asyn
   expect(r.ballY).toBeGreaterThan(600);
 });
 
+test('kickback: armed left outlane save relaunches ball back into play', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.restart();
+    window.__test.state.saverUntil = 0;
+    window.__test.place(20, 620, 0, 180);
+
+    let kickbackFired = false;
+    let reachedUpperPlayfield = false;
+    for (let i = 0; i < 600; i++){
+      window.__test.step(1);
+      const b = window.__test.ball;
+      const s = window.__test.state;
+      if (!s.kickback) kickbackFired = true;
+      if (kickbackFired && b.p.y < 430) reachedUpperPlayfield = true;
+      if (s.balls < 3) break;
+    }
+
+    return {
+      kickbackFired,
+      reachedUpperPlayfield,
+      balls: window.__test.state.balls,
+      ball: { ...window.__test.ball },
+    };
+  });
+
+  expect(r.kickbackFired).toBe(true);
+  expect(r.reachedUpperPlayfield).toBe(true);
+  expect(r.balls).toBe(3);
+});
+
 test('hud: score displays and game-over allows restart', async ({ page }) => {
   await page.goto(URL);
   const r = await page.evaluate(() => {

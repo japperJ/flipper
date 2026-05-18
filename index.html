@@ -571,12 +571,14 @@ function physicsStep(dt){
   }
   // Kickback: fires the ball back out of the left outlane when armed.
   if (state.kickback && ball.p.x > 2 && ball.p.x < 30 && ball.p.y > 550 && ball.p.y < 700){
-    ball.v.x = 420;
-    ball.v.y = -480;
+    ball.p.x = KICKBACK_EJECT.x;
+    ball.p.y = KICKBACK_EJECT.y;
+    ball.v.x = KICKBACK_EJECT.vx;
+    ball.v.y = KICKBACK_EJECT.vy;
     state.kickback = false;
     state.kickbackFlash = 0.8;
-    spawnParticles(ball.p.x, ball.p.y, 24, '#0ff');
-    spawnFloat('KICKBACK!', 80, 555, '#0ff');
+    spawnParticles(26, 620, 24, '#0ff');
+    spawnFloat('KICKBACK!', 92, 540, '#0ff');
     shake = 12;
   }
   handleDrain();
@@ -587,6 +589,7 @@ const walls = []; const arcs = []; const bumpers = []; const slings = []; const 
 const SHOOTER_X = 380;
 const SHOOTER_GATE_Y = 80;
 const DRAIN_LEFT = 175, DRAIN_RIGHT = 245;
+const KICKBACK_EJECT = { x: 68, y: 510, vx: 340, vy: -580 };
 
 function buildTable(){
   // Outer perimeter — top (only over playfield, not over shooter lane), left, right
