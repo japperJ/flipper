@@ -287,3 +287,79 @@ test('integration: 8 seconds of active play does not error', async ({ page }) =>
   });
   expect(errors).toEqual([]);
 });
+
+test('theme: can switch in menu but not during active play', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setThemeFromMenu('cosmic-wedge');
+    const inMenu = window.__test.getThemeId();
+
+    window.__test.closeMenuAndResume();
+    window.__test.forcePhase('playing');
+    window.__test.setThemeFromMenu('volcano-pop');
+    const duringPlay = window.__test.getThemeId();
+
+    return { inMenu, duringPlay };
+  });
+
+  expect(r.inMenu).toBe('cosmic-wedge');
+  expect(r.duringPlay).toBe('cosmic-wedge');
+});
+
+test('theme/sound: settings persist across reload', async ({ page }) => {
+  await page.goto(URL);
+  await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setThemeFromMenu('volcano-pop');
+    window.__test.setSoundFromMenu(false);
+  });
+
+  await page.reload();
+
+  const saved = await page.evaluate(() => ({
+    themeId: window.__test.getThemeId(),
+    soundEnabled: window.__test.isSoundEnabled(),
+  }));
+
+  expect(saved.themeId).toBe('volcano-pop');
+  expect(saved.soundEnabled).toBe(false);
+});
+
+test('theme: invalid saved theme falls back to default', async ({ page }) => {
+  await page.goto(URL);
+  await page.evaluate(() => {
+    localStorage.setItem('flipper.themeId', 'nope-not-a-theme');
+  });
+  await page.reload();
+
+  const id = await page.evaluate(() => window.__test.getThemeId());
+  expect(id).toBe('sunburst-classic');
+});
+
+test('lights: gameplay event creates active light effect', async ({ page }) => {
+  await page.goto(URL);
+  const n = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.dispatchThemeEvent('bumper_hit', { x: 160, y: 220 });
+    return window.__test.getActiveLightEffectCount();
+  });
+  expect(n).toBeGreaterThan(0);
+});
+
+test('audio: sound off blocks event playback counter', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setSoundFromMenu(false);
+    const before = window.__test.getAudioPlayCount();
+    window.__test.dispatchThemeEvent('sling_hit', { x: 100, y: 500 });
+    const after = window.__test.getAudioPlayCount();
+    return { before, after };
+  });
+
+  expect(r.after).toBe(r.before);
+});

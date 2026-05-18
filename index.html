@@ -32,6 +32,160 @@ const V = {
 };
 const clamp=(v,lo,hi)=>v<lo?lo:v>hi?hi:v;
 
+const DEFAULT_THEME_ID = 'sunburst-classic';
+const THEME_STORAGE_KEY = 'flipper.themeId';
+const SOUND_STORAGE_KEY = 'flipper.soundEnabled';
+
+const THEME_PACKS = {
+  'sunburst-classic': {
+    id: 'sunburst-classic',
+    name: 'Sunburst Classic',
+    palette: {
+      bg: '#1a1208', lane: '#f5c242', insertOn: '#ffd86b', insertOff: '#6b561d',
+      bumperGlow: '#ffd86b', slingGlow: '#ff824d', textPrimary: '#fff4d0', textAccent: '#ffcf5f',
+    },
+    lights: {
+      bumper_hit: { type: 'pulse', color: '#ffd86b', life: 0.24, size: 22 },
+      sling_hit: { type: 'pulse', color: '#ff824d', life: 0.20, size: 20 },
+      drop_clear: { type: 'chase', color: '#fff2b3', life: 0.42, size: 16 },
+      jackpot: { type: 'strobeBurst', color: '#fff8cc', life: 0.60, size: 30 },
+      drain: { type: 'sweep', color: '#ffb36b', life: 0.30, size: 18 },
+      game_over: { type: 'sweep', color: '#ffc07a', life: 0.45, size: 20 },
+    },
+    audio: {
+      bumper_hit: { wave: 'triangle', freq: 420, dur: 0.05, gain: 0.08 },
+      sling_hit: { wave: 'square', freq: 320, dur: 0.07, gain: 0.07 },
+      drop_clear: { wave: 'sine', freq: 760, dur: 0.08, gain: 0.07 },
+      jackpot: { wave: 'triangle', freq: 980, dur: 0.14, gain: 0.10 },
+      drain: { wave: 'sawtooth', freq: 210, dur: 0.18, gain: 0.08 },
+      game_over: { wave: 'sawtooth', freq: 150, dur: 0.24, gain: 0.09 },
+      ui_toggle: { wave: 'sine', freq: 600, dur: 0.04, gain: 0.05 },
+    },
+  },
+  'cosmic-wedge': {
+    id: 'cosmic-wedge',
+    name: 'Cosmic Wedge',
+    palette: {
+      bg: '#0f1626', lane: '#2ad1c9', insertOn: '#ff7043', insertOff: '#4a3a33',
+      bumperGlow: '#4dd0e1', slingGlow: '#ff7043', textPrimary: '#e8f7ff', textAccent: '#ffab91',
+    },
+    lights: {
+      bumper_hit: { type: 'pulse', color: '#4dd0e1', life: 0.22, size: 23 },
+      sling_hit: { type: 'pulse', color: '#ff7043', life: 0.20, size: 21 },
+      drop_clear: { type: 'sweep', color: '#80deea', life: 0.40, size: 17 },
+      jackpot: { type: 'chase', color: '#ffab91', life: 0.58, size: 28 },
+      drain: { type: 'sweep', color: '#26c6da', life: 0.30, size: 18 },
+      game_over: { type: 'strobeBurst', color: '#ff8a65', life: 0.42, size: 21 },
+    },
+    audio: {
+      bumper_hit: { wave: 'square', freq: 520, dur: 0.05, gain: 0.08 },
+      sling_hit: { wave: 'square', freq: 390, dur: 0.07, gain: 0.07 },
+      drop_clear: { wave: 'triangle', freq: 840, dur: 0.08, gain: 0.07 },
+      jackpot: { wave: 'sine', freq: 1200, dur: 0.12, gain: 0.10 },
+      drain: { wave: 'sawtooth', freq: 230, dur: 0.18, gain: 0.08 },
+      game_over: { wave: 'square', freq: 170, dur: 0.24, gain: 0.09 },
+      ui_toggle: { wave: 'sine', freq: 680, dur: 0.04, gain: 0.05 },
+    },
+  },
+  'volcano-pop': {
+    id: 'volcano-pop',
+    name: 'Volcano Pop',
+    palette: {
+      bg: '#1a2a1a', lane: '#9de86b', insertOn: '#ffa726', insertOff: '#5c4a2a',
+      bumperGlow: '#8bc34a', slingGlow: '#ff9800', textPrimary: '#f4ffe8', textAccent: '#ffcc80',
+    },
+    lights: {
+      bumper_hit: { type: 'strobeBurst', color: '#8bc34a', life: 0.20, size: 24 },
+      sling_hit: { type: 'pulse', color: '#ff9800', life: 0.20, size: 21 },
+      drop_clear: { type: 'chase', color: '#c5e1a5', life: 0.44, size: 18 },
+      jackpot: { type: 'strobeBurst', color: '#ffcc80', life: 0.62, size: 30 },
+      drain: { type: 'sweep', color: '#aed581', life: 0.30, size: 18 },
+      game_over: { type: 'sweep', color: '#ffb74d', life: 0.45, size: 22 },
+    },
+    audio: {
+      bumper_hit: { wave: 'triangle', freq: 460, dur: 0.05, gain: 0.09 },
+      sling_hit: { wave: 'sawtooth', freq: 340, dur: 0.07, gain: 0.08 },
+      drop_clear: { wave: 'sine', freq: 720, dur: 0.09, gain: 0.07 },
+      jackpot: { wave: 'triangle', freq: 1040, dur: 0.13, gain: 0.10 },
+      drain: { wave: 'sawtooth', freq: 210, dur: 0.18, gain: 0.08 },
+      game_over: { wave: 'sawtooth', freq: 145, dur: 0.24, gain: 0.09 },
+      ui_toggle: { wave: 'sine', freq: 560, dur: 0.04, gain: 0.05 },
+    },
+  },
+};
+
+const settings = {
+  themeId: DEFAULT_THEME_ID,
+  soundEnabled: true,
+};
+
+const menu = {
+  open: false,
+};
+
+function isThemeIdValid(id){
+  return Object.prototype.hasOwnProperty.call(THEME_PACKS, id);
+}
+
+function getActiveTheme(){
+  return THEME_PACKS[settings.themeId] || THEME_PACKS[DEFAULT_THEME_ID];
+}
+
+function saveSettings(){
+  localStorage.setItem(THEME_STORAGE_KEY, settings.themeId);
+  localStorage.setItem(SOUND_STORAGE_KEY, String(settings.soundEnabled));
+}
+
+function loadSettings(){
+  const rawTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  const rawSound = localStorage.getItem(SOUND_STORAGE_KEY);
+
+  settings.themeId = isThemeIdValid(rawTheme) ? rawTheme : DEFAULT_THEME_ID;
+  settings.soundEnabled = rawSound === null ? true : rawSound === 'true';
+
+  if (!isThemeIdValid(rawTheme)) localStorage.setItem(THEME_STORAGE_KEY, settings.themeId);
+  if (rawSound === null) localStorage.setItem(SOUND_STORAGE_KEY, String(settings.soundEnabled));
+}
+
+function setThemeId(nextId){
+  if (!isThemeIdValid(nextId)) return false;
+  settings.themeId = nextId;
+  saveSettings();
+  return true;
+}
+
+function setSoundEnabled(enabled){
+  settings.soundEnabled = !!enabled;
+  saveSettings();
+}
+
+function openMenu(){
+  paused = true;
+  menu.open = true;
+}
+
+function closeMenuAndResume(){
+  menu.open = false;
+  paused = false;
+}
+
+function canApplyThemeFromMenu(){
+  return menu.open && paused;
+}
+
+function applyThemeFromMenu(themeId){
+  if (!(menu.open && paused)) return false;
+  if (state.phase === 'playing') return false;
+  return setThemeId(themeId);
+}
+
+function applySoundFromMenu(enabled){
+  if (!canApplyThemeFromMenu()) return false;
+  setSoundEnabled(enabled);
+  if (enabled) playThemeSound('ui_toggle');
+  return true;
+}
+
 // Swept circle (center p0, displacement d=v*dt, radius r) vs static segment [a,b].
 // Returns { toi in [0,1], normal } or null. Normal points from segment toward circle.
 function sweepCircleSegment(p0, d, r, a, b){
@@ -191,6 +345,7 @@ function restartGame(){
 function handleDrain(){
   if (ball.p.y <= CONFIG.H + 50) return;
   const nowSec = performance.now()/1000;
+  dispatchThemeEvent('drain', { x:(DRAIN_LEFT + DRAIN_RIGHT)/2, y:CONFIG.H - 8 });
   if (state.saverUntil && nowSec < state.saverUntil){
     serveBall();
     return;
@@ -198,6 +353,7 @@ function handleDrain(){
   state.balls = Math.max(0, state.balls - 1);
   if (state.balls <= 0){
     state.phase = 'gameover';
+    dispatchThemeEvent('game_over', { x: CONFIG.W/2, y: CONFIG.H/2 });
     if (state.score > state.hi) state.hi = state.score;
     ball.p = { x: -100, y: -100 };
     ball.v = { x: 0, y: 0 };
@@ -332,6 +488,7 @@ function physicsStep(dt){
       ball.p.x += best.normal.x * 0.5;
       ball.p.y += best.normal.y * 0.5;
       registerBumperHit(bp, nowSec);
+      dispatchThemeEvent('bumper_hit', { x: ball.p.x, y: ball.p.y });
       const bumperValue = bp.value + (superBumpers ? 350 : 0);
       state.score += bumperValue * state.mult;
       registerScoreEvent();
@@ -342,6 +499,7 @@ function physicsStep(dt){
         state.score += 10000 * state.mult;
         spawnFloat('JACKPOT! +10000', CONFIG.W/2, 240, '#f5a');
         spawnParticles(bp.c.x, bp.c.y, 40, '#f5a');
+        dispatchThemeEvent('jackpot', { x: CONFIG.W/2, y: 240 });
         shake = 20;
       }
       remaining *= (1 - best.toi);
@@ -363,6 +521,7 @@ function physicsStep(dt){
       state.score += dp.value * state.mult;
       registerScoreEvent();
       spawnParticles(ball.p.x, ball.p.y, 8, '#fc4');
+      dispatchThemeEvent('drop_clear', { x: ball.p.x, y: ball.p.y });
       if (dropList.every(d => d.down)){
         state.dropCycles += 1;
         const clearBonus = 1500 * Math.min(state.dropCycles, 6) * state.mult;
@@ -396,6 +555,7 @@ function physicsStep(dt){
         ball.v.x += best.normal.x * boost;
         ball.v.y += best.normal.y * boost;
         sl.flash = 0.15;
+        dispatchThemeEvent('sling_hit', { x: ball.p.x, y: ball.p.y });
         state.score += sl.value * state.mult;
         registerScoreEvent();
         spawnParticles(ball.p.x, ball.p.y, 10, '#f3a');
@@ -551,9 +711,33 @@ function plungerStep(dt){
 // ============ 7. SCORING ============
 const state = { phase:'ready', score:0, hi:0, balls:3, mult:1, saverUntil:0, drops:[false,false,false], dropCycles:0, comboCount:0, comboUntil:0, kickback:true, kickbackFlash:0, bumperHits:0, superBumpersUntil:0, bumperChainCount:0, bumperChainUntil:0 };
 
+loadSettings();
+
 // ============ 8. INPUT ============
 const input = { L:false, R:false, plunge:false };
 window.addEventListener('keydown', e=>{
+  if (settings.soundEnabled){
+    try {
+      const a = getAudioContext();
+      if (a.state === 'suspended') a.resume();
+    } catch {}
+  }
+
+  if (e.key === 'Escape'){
+    if (menu.open) closeMenuAndResume();
+    else openMenu();
+    return;
+  }
+
+  if (menu.open){
+    if (e.key === '1') applyThemeFromMenu('sunburst-classic');
+    if (e.key === '2') applyThemeFromMenu('cosmic-wedge');
+    if (e.key === '3') applyThemeFromMenu('volcano-pop');
+    if (e.key === 's' || e.key === 'S') applySoundFromMenu(!settings.soundEnabled);
+    if (e.key === 'Enter') closeMenuAndResume();
+    return;
+  }
+
   if (e.key === ' ' && state.phase === 'gameover'){ restartGame(); return; }
   if (e.key==='z' || e.key==='Z' || e.key==='ArrowLeft') input.L = true;
   if (e.key==='/' || e.key==='ArrowRight') input.R = true;
@@ -570,7 +754,87 @@ window.addEventListener('keyup', e=>{
 const trail = [];
 const particles = [];
 const floatTexts = []; // {text,x,y,vx,vy,life,maxLife,color}
+const lightEffects = []; // {x,y,color,life,maxLife,size,type,phase}
 let shake = 0;
+let ac = null;
+let audioPlayCount = 0;
+
+function getAudioContext(){
+  if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+  return ac;
+}
+
+function playThemeSound(type){
+  if (!settings.soundEnabled) return;
+  const theme = getActiveTheme();
+  const s = theme.audio[type];
+  if (!s) return;
+  try {
+    const a = getAudioContext();
+    const osc = a.createOscillator();
+    const gain = a.createGain();
+    osc.type = s.wave;
+    osc.frequency.value = s.freq;
+    gain.gain.value = s.gain;
+    osc.connect(gain);
+    gain.connect(a.destination);
+    const t0 = a.currentTime;
+    osc.start(t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + s.dur);
+    osc.stop(t0 + s.dur);
+    audioPlayCount += 1;
+  } catch {
+    // Audio may be unavailable in some environments (tests/headless); ignore.
+  }
+}
+
+function enqueueLightEffect(type, payload={}){
+  const theme = getActiveTheme();
+  const recipe = theme.lights[type];
+  if (!recipe) return;
+  lightEffects.push({
+    x: payload.x ?? CONFIG.W/2,
+    y: payload.y ?? CONFIG.H/2,
+    color: recipe.color,
+    life: recipe.life,
+    maxLife: recipe.life,
+    size: recipe.size,
+    type: recipe.type,
+    phase: 0,
+  });
+}
+
+function dispatchThemeEvent(type, payload={}){
+  enqueueLightEffect(type, payload);
+  playThemeSound(type);
+}
+
+function updateLightEffects(dt){
+  for (let i = lightEffects.length - 1; i >= 0; i--){
+    const e = lightEffects[i];
+    e.life -= dt;
+    e.phase += dt * 12;
+    if (e.life <= 0) lightEffects.splice(i, 1);
+  }
+}
+
+function renderLightEffects(){
+  for (const e of lightEffects){
+    const a = Math.max(0, e.life / e.maxLife);
+    const pulse = e.type === 'strobeBurst' ? (Math.sin(e.phase * 8) > 0 ? 1 : 0.45) : 1;
+    const r = e.size * (1 + (1 - a) * 0.9);
+    ctx.save();
+    ctx.globalAlpha = a * 0.45 * pulse;
+    ctx.shadowColor = e.color;
+    ctx.shadowBlur = 22;
+    ctx.fillStyle = e.color;
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
 function spawnFloat(text, x, y, color='#fc4'){
   floatTexts.push({text, x, y, vx:(Math.random()-0.5)*40, vy:-80, life:1.4, maxLife:1.4, color});
 }
@@ -595,6 +859,9 @@ function render(){
   const dtRender = 1/60;
   const nowSec = performance.now()/1000;
   const superBumpers = bumperSuperActive(nowSec);
+  const theme = getActiveTheme();
+  const palette = theme.palette;
+  updateLightEffects(dtRender);
   trail.push({ x: ball.p.x, y: ball.p.y });
   if (trail.length > 12) trail.shift();
   for (let i = particles.length - 1; i >= 0; i--){
@@ -607,7 +874,7 @@ function render(){
   }
   if (shake > 0) shake = Math.max(0, shake - dtRender * 30);
 
-  ctx.fillStyle = '#0a0612';
+  ctx.fillStyle = palette.bg;
   ctx.fillRect(0,0,CONFIG.W,CONFIG.H);
   ctx.save();
   if (shake > 0){
@@ -618,8 +885,8 @@ function render(){
   for (const s of segments){
     if (s.enabled === false) continue;
     if (s.kind === 'sling') continue; // rendered separately below
-    ctx.strokeStyle = '#6cf';
-    ctx.shadowColor = '#3af';
+    ctx.strokeStyle = palette.lane;
+    ctx.shadowColor = palette.insertOn;
     ctx.shadowBlur = 8;
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -630,8 +897,8 @@ function render(){
   ctx.shadowBlur = 0;
   // Arcs (outlane guides)
   for (const ar of arcRegistry){
-    ctx.strokeStyle = '#6cf';
-    ctx.shadowColor = '#3af';
+    ctx.strokeStyle = palette.lane;
+    ctx.shadowColor = palette.insertOn;
     ctx.shadowBlur = 8;
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -658,7 +925,7 @@ function render(){
       const t = 1 - (bp.flash / 0.45); // 0..1 over the flash lifetime
       ctx.save();
       ctx.globalAlpha = 1 - t;
-      ctx.strokeStyle = '#fff';
+      ctx.strokeStyle = palette.insertOn;
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.arc(bp.c.x, bp.c.y, bp.r + t * 22, 0, 2*Math.PI);
@@ -669,15 +936,15 @@ function render(){
       const pulse = 0.5 + 0.5*Math.sin(performance.now()/120 + bp.c.x*0.02);
       ctx.save();
       ctx.globalAlpha = 0.22 + pulse * 0.2;
-      ctx.strokeStyle = '#0ff';
+      ctx.strokeStyle = palette.bumperGlow;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(bp.c.x, bp.c.y, bp.r + 8 + pulse * 8, 0, 2*Math.PI);
       ctx.stroke();
       ctx.restore();
     }
-    ctx.fillStyle = bp.flash > 0 ? '#fff' : (superBumpers ? '#9ff' : '#5cf');
-    ctx.shadowColor = superBumpers ? '#0ff' : '#5cf';
+    ctx.fillStyle = bp.flash > 0 ? '#fff' : (superBumpers ? palette.insertOn : palette.bumperGlow);
+    ctx.shadowColor = superBumpers ? palette.insertOn : palette.bumperGlow;
     ctx.shadowBlur = bp.flash > 0 ? 24 : (superBumpers ? 20 : 12);
     ctx.beginPath(); ctx.arc(bp.c.x, bp.c.y, bp.r, 0, 2*Math.PI); ctx.fill();
     ctx.shadowBlur = 0;
@@ -690,14 +957,14 @@ function render(){
     bp.flash = Math.max(0, bp.flash - 1/60);
   }
   for (const sl of slingList){
-    ctx.strokeStyle = sl.flash > 0 ? '#fff' : '#f3a';
+    ctx.strokeStyle = sl.flash > 0 ? '#fff' : palette.slingGlow;
     ctx.lineWidth = 6; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(sl.a.x, sl.a.y); ctx.lineTo(sl.b.x, sl.b.y); ctx.stroke();
     sl.flash = Math.max(0, sl.flash - 1/60);
   }
   for (const dp of dropList){
     if (dp.down) continue;
-    ctx.fillStyle = '#fc4';
+    ctx.fillStyle = palette.insertOn;
     ctx.fillRect(dp.c.x - dp.w/2, dp.c.y - dp.h/2, dp.w, dp.h);
   }
   for (let i = 0; i < trail.length; i++){
@@ -719,6 +986,7 @@ function render(){
     ctx.fillStyle = p.color;
     ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill();
   }
+  renderLightEffects();
   // Floating score/event texts
   for (let i = floatTexts.length - 1; i >= 0; i--){
     const ft = floatTexts[i];
@@ -739,38 +1007,38 @@ function render(){
   ctx.globalAlpha = 1;
   ctx.textAlign = 'start';
   ctx.restore();
-  ctx.fillStyle = '#5cf';
+  ctx.fillStyle = palette.textAccent;
   ctx.font = "10px 'Press Start 2P', monospace";
   ctx.fillText('NEON PINBALL', 8, 16);
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = palette.textPrimary;
   ctx.fillText('SCORE ' + state.score.toString().padStart(7,'0'), 8, 36);
   ctx.fillText('BALLS ' + state.balls, 8, 50);
   if (state.dropCycles > 0){
-    ctx.fillStyle = '#fc4';
+    ctx.fillStyle = palette.insertOn;
     ctx.fillText('BNK x' + state.dropCycles, 8, 64);
   }
-  ctx.fillStyle = state.mult > 1 ? '#fc4' : '#888';
+  ctx.fillStyle = state.mult > 1 ? palette.insertOn : '#888';
   ctx.fillText('x' + state.mult, 380, 36);
   if (state.saverUntil > nowSec){
     ctx.fillStyle = '#5f5';
     ctx.fillText('SAVER', 350, 50);
   }
   if (state.kickback){
-    ctx.fillStyle = '#0ff';
-    ctx.shadowColor = '#0ff'; ctx.shadowBlur = 6;
+    ctx.fillStyle = palette.bumperGlow;
+    ctx.shadowColor = palette.bumperGlow; ctx.shadowBlur = 6;
     ctx.fillText('KBCK', 350, 65);
     ctx.shadowBlur = 0;
   } else if (state.kickbackFlash > 0){
     ctx.globalAlpha = state.kickbackFlash / 0.8;
-    ctx.fillStyle = '#0ff';
+    ctx.fillStyle = palette.bumperGlow;
     ctx.fillText('KBCK', 350, 65);
     ctx.globalAlpha = 1;
     state.kickbackFlash = Math.max(0, state.kickbackFlash - 1/60);
   }
   if (superBumpers){
-    ctx.fillStyle = '#0ff';
+    ctx.fillStyle = palette.bumperGlow;
     ctx.textAlign = 'center';
-    ctx.shadowColor = '#0ff';
+    ctx.shadowColor = palette.bumperGlow;
     ctx.shadowBlur = 8;
     ctx.fillText('SUPER BUMPERS', CONFIG.W/2, 64);
     ctx.shadowBlur = 0;
@@ -788,6 +1056,37 @@ function render(){
     ctx.fillText('PRESS SPACE', CONFIG.W/2, CONFIG.H/2 + 24);
     ctx.textAlign = 'start';
   }
+
+  ctx.fillStyle = palette.textAccent;
+  ctx.font = "8px 'Press Start 2P', monospace";
+  ctx.fillText(theme.name.toUpperCase(), 8, 78);
+
+  renderMenuOverlay();
+}
+
+function renderMenuOverlay(){
+  if (!menu.open) return;
+  const t = getActiveTheme();
+  const p = t.palette;
+  ctx.fillStyle = 'rgba(0,0,0,0.72)';
+  ctx.fillRect(20, 120, CONFIG.W - 40, 300);
+  ctx.strokeStyle = p.textAccent;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(20, 120, CONFIG.W - 40, 300);
+  ctx.fillStyle = p.textPrimary;
+  ctx.font = "10px 'Press Start 2P', monospace";
+  ctx.textAlign = 'center';
+  ctx.fillText('CABINET MENU', CONFIG.W/2, 155);
+  ctx.textAlign = 'left';
+  ctx.fillText('1 SUNBURST CLASSIC', 50, 200);
+  ctx.fillText('2 COSMIC WEDGE', 50, 228);
+  ctx.fillText('3 VOLCANO POP', 50, 256);
+  ctx.fillText('S SOUND: ' + (settings.soundEnabled ? 'ON' : 'OFF'), 50, 294);
+  ctx.fillText('ENTER APPLY/RESUME', 50, 332);
+  ctx.fillText('ESC CANCEL/RESUME', 50, 360);
+  ctx.textAlign = 'center';
+  ctx.fillText('ACTIVE: ' + t.name.toUpperCase(), CONFIG.W/2, 390);
+  ctx.textAlign = 'start';
 }
 
 // ============ 10. LOOP ============
@@ -814,6 +1113,7 @@ function frame(now){
 requestAnimationFrame(frame);
 
 // ============ 11. TEST HOOK ============
+const emitThemeEvent = dispatchThemeEvent;
 window.__test = {
   get ball(){ return ball; },
   get state(){ return state; },
@@ -830,6 +1130,16 @@ window.__test = {
   plungerCharge(amount){ plunger.charge = clamp(amount, 0, 1); },
   plungerRelease(){ plungerRelease(); },
   restart(){ restartGame(); },
+  openMenu(){ openMenu(); },
+  closeMenuAndResume(){ closeMenuAndResume(); },
+  setThemeFromMenu(id){ return applyThemeFromMenu(id); },
+  setSoundFromMenu(enabled){ return applySoundFromMenu(enabled); },
+  getThemeId(){ return settings.themeId; },
+  isSoundEnabled(){ return settings.soundEnabled; },
+  forcePhase(phase){ state.phase = phase; },
+  dispatchThemeEvent(type, payload){ emitThemeEvent(type, payload); },
+  getActiveLightEffectCount(){ return lightEffects.length; },
+  getAudioPlayCount(){ return audioPlayCount; },
 };
 </script>
 </body>
