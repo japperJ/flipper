@@ -1,5 +1,8 @@
 # NEON PINBALL
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+![TinyToolTown](https://img.shields.io/badge/TinyToolTown-Ready-00b894)
+
 Arcade-style browser pinball with a neon cabinet look, theme packs, light effects, and a pause/cabinet menu.
 
 ![NEON PINBALL Screenshot](./image.png)
@@ -32,6 +35,16 @@ Arcade-style browser pinball with a neon cabinet look, theme packs, light effect
 
 Open `index.html` directly in your browser.
 
+## TinyToolTown readiness
+
+This repository is prepared for TinyToolTown publication:
+
+- ✅ Single-file playable app (`index.html`)
+- ✅ Keyboard controls documented
+- ✅ Screenshot included for listing/preview (`image.png`)
+- ✅ Automated test coverage via Playwright
+- ✅ MIT license included for open redistribution
+
 ## Run tests
 
 Install dependencies (if needed), then run Playwright:
@@ -44,4 +57,10 @@ Install dependencies (if needed), then run Playwright:
 - `index.html` — Game + rendering + input + menu
 - `launch.spec.js` — Playwright gameplay and regression tests
 - `docs/superpowers/` — design/spec/planning docs
+
+## License
+
+This project is licensed under the **MIT License**.
+
+See [`LICENSE`](./LICENSE) for full text.
 
