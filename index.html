@@ -816,7 +816,7 @@ function physicsStep(dt){
     remaining *= (1 - best.toi);
   }
   // Kickback: fires the ball back out of the left outlane when armed.
-  if (state.kickback && ball.p.x > 2 && ball.p.x < 30 && ball.p.y > 550 && ball.p.y < 700){
+  if (state.kickback && ball.p.x > 2 && ball.p.x < 64 && ball.p.y > 550 && ball.p.y < 700){
     ball.p.x = KICKBACK_EJECT.x;
     ball.p.y = KICKBACK_EJECT.y;
     ball.v.x = KICKBACK_EJECT.vx;
