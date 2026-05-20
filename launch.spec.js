@@ -672,3 +672,67 @@ test('table: spell-neon mode has 4 top lanes with labels N E O N', async ({ page
   });
   expect(r).toEqual(['N','E','O','N']);
 });
+
+test('top lanes: ball at top lights the lane it passes through', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('top-lanes');
+    window.__test.restart();
+    // Place ball inside first lane's x range, just above detection threshold
+    const lane = window.__test.topLanes[0];
+    const cx = (lane.xMin + lane.xMax) / 2;
+    window.__test.place(cx, 70, 0, -50);
+    for (let i = 0; i < 10; i++) window.__test.step(1);
+    return window.__test.topLanes.map(l => l.lit);
+  });
+  expect(r[0]).toBe(true);
+  expect(r.slice(1).every(v => !v)).toBe(true);
+});
+
+test('top lanes: completing all 5 in top-lanes mode raises multiplier', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('top-lanes');
+    window.__test.restart();
+    window.__test.state.mult = 1;
+    const lanes = window.__test.topLanes;
+    // Light first 4 lanes manually, leave last unlit
+    for (let i = 0; i < lanes.length - 1; i++) lanes[i].lit = true;
+    lanes[lanes.length - 1].lit = false;
+    // Fly ball through last lane
+    const cx = (lanes[lanes.length-1].xMin + lanes[lanes.length-1].xMax) / 2;
+    window.__test.place(cx, 70, 0, -50);
+    for (let i = 0; i < 15; i++) window.__test.step(1);
+    return { mult: window.__test.state.mult, anyLit: window.__test.topLanes.some(l => l.lit) };
+  });
+  expect(r.mult).toBeGreaterThanOrEqual(2); // multiplier went up from 1 to 2
+  expect(r.anyLit).toBe(false); // lanes reset after completion
+});
+
+test('top lanes: spell-neon completion fires jackpot and doubles base', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('spell-neon');
+    window.__test.restart();
+    const lanes = window.__test.topLanes;
+    const before = window.__test.state.score;
+    // Light first 3, then fly ball through last
+    for (let i = 0; i < 3; i++) lanes[i].lit = true;
+    lanes[3].lit = false;
+    const cx = (lanes[3].xMin + lanes[3].xMax) / 2;
+    window.__test.place(cx, 70, 0, -50);
+    for (let i = 0; i < 15; i++) window.__test.step(1);
+    return {
+      scoreDelta: window.__test.state.score - before,
+      jackpotBase: window.__test.state.spellJackpotBase,
+    };
+  });
+  expect(r.scoreDelta).toBeGreaterThan(0);
+  expect(r.jackpotBase).toBe(10000); // doubled from 5000
+});

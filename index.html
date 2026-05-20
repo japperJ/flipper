@@ -436,6 +436,7 @@ const dropList = []; // { c (center), w, h, down, downUntil, value }
 function addDrop(c, w=24, h=8, value=200){ dropList.push({ c, w, h, down:false, downUntil:0, value }); }
 
 const topLaneList = []; // { xMin, xMax, label, lit }
+let topLanesZoneCooldown = false; // prevents re-detection after completion while ball still in zone
 
 function clearTable(){
   segments.length = 0;
@@ -451,6 +452,7 @@ function serveBall(){
   ball.p = { x: 400, y: 680 };
   ball.v = { x: 0, y: 0 };
   state.phase = 'ready';
+  state.spellJackpotBase = 5000;
   state.saverUntil = performance.now()/1000 + 5;
 }
 
@@ -470,6 +472,10 @@ function restartGame(){
   state.bumperChainCount = 0;
   state.bumperChainUntil = 0;
   state.extraBallAwarded = false;
+  state.rightKickback = true;
+  state.rightKickbackFlash = 0;
+  state.spellJackpotBase = 5000;
+  topLanesZoneCooldown = false;
   floatTexts.length = 0;
   clearTable();
   buildTable();
@@ -529,6 +535,46 @@ function maybeAwardExtraBall(){
 function applyScore(points){
   state.score += points;
   maybeAwardExtraBall();
+}
+
+function handleTopLanesComplete(){
+  const mode = getActiveMode();
+  const nowSec = performance.now()/1000;
+  if (mode.onLaneComplete === 'multiplier'){
+    if (state.mult < 4){
+      state.mult += 1;
+      spawnFloat('LANES! MULT x' + state.mult, CONFIG.W/2, 200, '#fc4');
+    } else {
+      applyScore(5000 * state.mult);
+      spawnFloat('MAX MULT! +' + (5000 * state.mult), CONFIG.W/2, 200, '#fc4');
+    }
+    spawnParticles(CONFIG.W/2, 80, 20, '#fc4');
+    dispatchThemeEvent('jackpot', { x: CONFIG.W/2, y: 80 });
+    shake = Math.max(shake, 12);
+  } else if (mode.onLaneComplete === 'points-burst'){
+    const pts = 1000 * state.mult;
+    applyScore(pts);
+    spawnFloat('LANE BONUS +' + pts, CONFIG.W/2, 200, '#5cf');
+    spawnParticles(CONFIG.W/2, 80, 20, '#5cf');
+    dispatchThemeEvent('drop_clear', { x: CONFIG.W/2, y: 80 });
+    shake = Math.max(shake, 8);
+  } else if (mode.onLaneComplete === 'jackpot'){
+    const pts = state.spellJackpotBase * state.mult;
+    applyScore(pts);
+    spawnFloat('N-E-O-N! +' + pts, CONFIG.W/2, 200, '#0ff');
+    spawnParticles(CONFIG.W/2, 80, 30, '#0ff');
+    dispatchThemeEvent('jackpot', { x: CONFIG.W/2, y: 80 });
+    state.spellJackpotBase = Math.min(state.spellJackpotBase * 2, 80000);
+    shake = Math.max(shake, 16);
+  } else if (mode.onLaneComplete === 'super-all'){
+    state.superBumpersUntil = nowSec + 10;
+    state.bumperChainCount = 0;
+    spawnFloat('FRENZY! ALL SUPER!', CONFIG.W/2, 200, '#f3a');
+    spawnParticles(CONFIG.W/2, 80, 40, '#f3a');
+    dispatchThemeEvent('jackpot', { x: CONFIG.W/2, y: 80 });
+    shake = Math.max(shake, 20);
+  }
+  for (const lane of topLaneList) lane.lit = false;
 }
 
 function bumperSuperActive(nowSec = performance.now()/1000){
@@ -732,6 +778,27 @@ function physicsStep(dt){
     shake = 12;
   }
   handleDrain();
+  // Top lane detection — zone extends to y<80 so balls placed/launched near y=70 register correctly.
+  // Triggers on both upward and downward travel (standard pinball behaviour).
+  if (ball.p.y > 24 && ball.p.y < 80){
+    if (!topLanesZoneCooldown){
+      for (const lane of topLaneList){
+        if (!lane.lit && ball.p.x >= lane.xMin && ball.p.x <= lane.xMax){
+          lane.lit = true;
+          applyScore(100 * state.mult);
+          registerScoreEvent();
+          spawnFloat(lane.label ? lane.label + '!' : '+100', ball.p.x, 68, '#5cf');
+          if (topLaneList.every(l => l.lit)){
+            handleTopLanesComplete();
+            topLanesZoneCooldown = true;
+          }
+          break;
+        }
+      }
+    }
+  } else {
+    topLanesZoneCooldown = false;
+  }
 }
 
 // ============ 4. TABLE ============
@@ -863,7 +930,7 @@ function plungerStep(dt){
 }
 
 // ============ 7. SCORING ============
-const state = { phase:'ready', score:0, hi:0, balls:3, mult:1, saverUntil:0, drops:[false,false,false], dropCycles:0, comboCount:0, comboUntil:0, kickback:true, kickbackFlash:0, bumperHits:0, superBumpersUntil:0, bumperChainCount:0, bumperChainUntil:0, extraBallAwarded:false };
+const state = { phase:'ready', score:0, hi:0, balls:3, mult:1, saverUntil:0, drops:[false,false,false], dropCycles:0, comboCount:0, comboUntil:0, kickback:true, kickbackFlash:0, bumperHits:0, superBumpersUntil:0, bumperChainCount:0, bumperChainUntil:0, extraBallAwarded:false, rightKickback:true, rightKickbackFlash:0, spellJackpotBase:5000 };
 
 loadSettings();
 
