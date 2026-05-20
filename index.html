@@ -93,10 +93,11 @@ const GAMEPLAY_MODES = {
       { c:{x:228,y:295}, w:38, h:14, value:300 },
       { c:{x:267,y:295}, w:38, h:14, value:300 },
     ],
-    // Funnel rails directing ball toward the drop wall
+    // Funnel rails directing ball toward the drop wall.
+    // Bottom endpoints connect to sling tops (55,490)/(365,490) to close the outlane pockets.
     guides: [
-      { a:{x:52, y:420}, b:{x:128, y:292} },
-      { a:{x:368,y:420}, b:{x:292, y:292} },
+      { a:{x:55, y:490}, b:{x:128, y:292} },
+      { a:{x:365,y:490}, b:{x:292, y:292} },
     ],
   },
   'spell-neon': {
@@ -117,10 +118,11 @@ const GAMEPLAY_MODES = {
       { c:{x:210,y:365}, w:24, h:8, value:200 },
       { c:{x:245,y:365}, w:24, h:8, value:200 },
     ],
-    // Steep angled rails deflecting ball upward toward the N-E-O-N lanes
+    // Steep angled rails deflecting ball upward toward the N-E-O-N lanes.
+    // Bottom endpoints connect to sling tops to close the outlane pockets.
     guides: [
-      { a:{x:52, y:370}, b:{x:102, y:212} },
-      { a:{x:368,y:370}, b:{x:318, y:212} },
+      { a:{x:55, y:490}, b:{x:102, y:212} },
+      { a:{x:365,y:490}, b:{x:318, y:212} },
     ],
   },
   'bumper-frenzy': {
@@ -139,10 +141,11 @@ const GAMEPLAY_MODES = {
       { c:{x:320,y:240}, r:24, gain:2.0, value:300 },
     ],
     drops: [],
-    // Angled rails deflecting ball INTO the bumper cluster
+    // Angled rails deflecting ball INTO the bumper cluster.
+    // Bottom endpoints connect to sling tops to close the outlane pockets.
     guides: [
-      { a:{x:52, y:400}, b:{x:128, y:268} },
-      { a:{x:368,y:400}, b:{x:292, y:268} },
+      { a:{x:55, y:490}, b:{x:128, y:268} },
+      { a:{x:365,y:490}, b:{x:292, y:268} },
     ],
   },
 };
