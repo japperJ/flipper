@@ -780,6 +780,7 @@ test('right kickback: armed right outlane relaunches ball back into play', async
     window.__test.pause();
     window.__test.restart();
     window.__test.state.saverUntil = 0;
+    window.__test.state.ballWasLaunched = true; // simulate ball having been launched
     // x=405, actually inside outlane channel (past the separator wall at x≈394)
     window.__test.place(405, 600, 0, 180);
     let kickbackFired = false;

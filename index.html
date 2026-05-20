@@ -449,10 +449,11 @@ function clearTable(){
 }
 
 function serveBall(){
-  ball.p = { x: 400, y: 700 };
+  ball.p = { x: 400, y: 680 };
   ball.v = { x: 0, y: 0 };
   state.phase = 'ready';
   state.spellJackpotBase = 5000;
+  state.ballWasLaunched = false;
   state.saverUntil = performance.now()/1000 + 5;
 }
 
@@ -475,6 +476,7 @@ function restartGame(){
   state.rightKickback = true;
   state.rightKickbackFlash = 0;
   state.spellJackpotBase = 5000;
+  state.ballWasLaunched = false;
   topLanesZoneCooldown = false;
   floatTexts.length = 0;
   clearTable();
@@ -780,7 +782,7 @@ function physicsStep(dt){
     shake = 12;
   }
   // Right kickback (symmetric to left)
-  if (state.rightKickback && ball.p.x > 393 && ball.p.x < 418 && ball.p.y > 550 && ball.p.y < 700 && ball.v.y > 0){
+  if (state.rightKickback && state.ballWasLaunched && ball.p.x > 393 && ball.p.x < 418 && ball.p.y > 550 && ball.p.y < 700 && ball.v.y > 0){
     ball.p.x = RIGHT_KICKBACK_EJECT.x;
     ball.p.y = RIGHT_KICKBACK_EJECT.y;
     ball.v.x = RIGHT_KICKBACK_EJECT.vx;
@@ -949,6 +951,7 @@ function plungerCharge(dt){ plunger.charge = clamp(plunger.charge + plunger.char
 function plungerRelease(){
   if (ball.p.x > SHOOTER_X && ball.p.y > 600){
     ball.v.y = -plunger.charge * plunger.maxImpulse;
+    state.ballWasLaunched = true;
     state.saverUntil = performance.now()/1000 + 5;
   }
   plunger.charge = 0;
@@ -959,7 +962,7 @@ function plungerStep(dt){
 }
 
 // ============ 7. SCORING ============
-const state = { phase:'ready', score:0, hi:0, balls:3, mult:1, saverUntil:0, drops:[false,false,false], dropCycles:0, comboCount:0, comboUntil:0, kickback:true, kickbackFlash:0, bumperHits:0, superBumpersUntil:0, bumperChainCount:0, bumperChainUntil:0, extraBallAwarded:false, rightKickback:true, rightKickbackFlash:0, spellJackpotBase:5000 };
+const state = { phase:'ready', score:0, hi:0, balls:3, mult:1, saverUntil:0, drops:[false,false,false], dropCycles:0, comboCount:0, comboUntil:0, kickback:true, kickbackFlash:0, bumperHits:0, superBumpersUntil:0, bumperChainCount:0, bumperChainUntil:0, extraBallAwarded:false, rightKickback:true, rightKickbackFlash:0, spellJackpotBase:5000, ballWasLaunched:false };
 
 loadSettings();
 
