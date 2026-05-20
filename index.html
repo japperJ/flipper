@@ -1106,6 +1106,58 @@ function spawnParticles(x, y, n, color){
 // ============ 9. RENDER ============
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
+
+function drawTopLanes(){
+  const lanes = topLaneList;
+  if (!lanes.length) return;
+  const theme = getActiveTheme();
+  const palette = theme.palette;
+  const totalW = 345; // xEnd - xStart = 355 - 10
+  const laneW = totalW / lanes.length;
+  const xStart = 10;
+  const yTop = 24;
+  const yBot = 50;
+
+  ctx.save();
+  ctx.lineWidth = 1;
+
+  for (let i = 0; i < lanes.length; i++){
+    const lane = lanes[i];
+    const lx = xStart + i * laneW;
+    const cx = lx + laneW / 2;
+
+    // Lane divider (left edge of each lane)
+    ctx.strokeStyle = lane.lit ? palette.bumperGlow : palette.lane;
+    ctx.shadowColor = lane.lit ? palette.bumperGlow : 'transparent';
+    ctx.shadowBlur = lane.lit ? 6 : 0;
+    ctx.beginPath();
+    ctx.moveTo(lx, yTop);
+    ctx.lineTo(lx, yBot);
+    ctx.stroke();
+
+    // Lane label
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = lane.lit ? palette.bumperGlow : palette.textPrimary;
+    ctx.shadowColor = lane.lit ? palette.bumperGlow : 'transparent';
+    ctx.shadowBlur = lane.lit ? 4 : 0;
+    ctx.fillText(lane.label, cx, yBot - 4);
+  }
+
+  // Right edge of last lane — matches last lane's lit state
+  const lastX = xStart + lanes.length * laneW;
+  const lastLane = lanes[lanes.length - 1];
+  ctx.strokeStyle = lastLane.lit ? palette.bumperGlow : palette.lane;
+  ctx.shadowColor = lastLane.lit ? palette.bumperGlow : 'transparent';
+  ctx.shadowBlur = lastLane.lit ? 6 : 0;
+  ctx.beginPath();
+  ctx.moveTo(lastX, yTop);
+  ctx.lineTo(lastX, yBot);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
 function render(){
   const dtRender = 1/60;
   const nowSec = performance.now()/1000;
@@ -1207,6 +1259,7 @@ function render(){
     ctx.fillText(String(bp.hits), bp.c.x, bp.c.y + 1);
     bp.flash = Math.max(0, bp.flash - 1/60);
   }
+   drawTopLanes();
   for (const sl of slingList){
     ctx.strokeStyle = sl.flash > 0 ? '#fff' : palette.slingGlow;
     ctx.lineWidth = 6; ctx.lineCap = 'round';
@@ -1454,3 +1507,5 @@ window.__test = {
 </script>
 </body>
 </html>
+
+
