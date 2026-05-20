@@ -232,7 +232,7 @@ function setGameplayModeId(id){
 }
 
 function applyGameplayModeFromMenu(id){
-  if (!canApplyThemeFromMenu()) return false;
+  if (!canApplyMenuSetting()) return false;
   return setGameplayModeId(id);
 }
 
@@ -279,7 +279,7 @@ function closeMenuAndResume(){
   paused = false;
 }
 
-function canApplyThemeFromMenu(){
+function canApplyMenuSetting(){
   return menu.open && paused;
 }
 
@@ -296,12 +296,12 @@ function getCabinetMenuRuleLines(){
 }
 
 function applyThemeFromMenu(themeId){
-  if (!canApplyThemeFromMenu()) return false;
+  if (!canApplyMenuSetting()) return false;
   return setThemeId(themeId);
 }
 
 function applySoundFromMenu(enabled){
-  if (!canApplyThemeFromMenu()) return false;
+  if (!canApplyMenuSetting()) return false;
   setSoundEnabled(enabled);
   if (enabled) playThemeSound('ui_toggle');
   return true;

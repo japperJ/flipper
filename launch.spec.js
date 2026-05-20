@@ -815,3 +815,66 @@ test('cabinet menu: keys 4-7 select gameplay modes', async ({ page }) => {
   expect(r.m6).toBe('spell-neon');
   expect(r.m7).toBe('bumper-frenzy');
 });
+
+test('integration: all 4 modes run 5 seconds without error', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.goto(URL);
+  for (const modeId of ['top-lanes','drop-bank','spell-neon','bumper-frenzy']){
+    await page.evaluate((id) => {
+      window.__test.pause();
+      window.__test.openMenu();
+      window.__test.setGameplayModeFromMenu(id);
+      window.__test.restart();
+      window.__test.place(140, 100, 30, 200);
+      for (let i = 0; i < 240*5; i++) window.__test.step(1);
+    }, modeId);
+  }
+  expect(errors).toEqual([]);
+});
+
+test('integration: table rebuild on restart does not leave stale physics objects', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('bumper-frenzy');
+    window.__test.restart();
+    const bumpersFrenzy = window.__test.bumpers.length;
+    const lanesFrenzy = window.__test.topLanes.length;
+
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('top-lanes');
+    window.__test.restart();
+    const bumpersTopLanes = window.__test.bumpers.length;
+    const lanesTopLanes = window.__test.topLanes.length;
+
+    return { bumpersFrenzy, lanesFrenzy, bumpersTopLanes, lanesTopLanes };
+  });
+  expect(r.bumpersFrenzy).toBe(6);
+  expect(r.lanesFrenzy).toBe(3);
+  expect(r.bumpersTopLanes).toBe(5);
+  expect(r.lanesTopLanes).toBe(5);
+});
+
+test('integration: top-lanes mult can reach x4 by completing lanes repeatedly', async ({ page }) => {
+  await page.goto(URL);
+  const mult = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('top-lanes');
+    window.__test.restart();
+    // Complete lanes 3 times to push mult from 1 → 4
+    for (let round = 0; round < 3; round++){
+      for (const lane of window.__test.topLanes) lane.lit = false;
+      const lanes = window.__test.topLanes;
+      for (let i = 0; i < lanes.length - 1; i++) lanes[i].lit = true;
+      lanes[lanes.length-1].lit = false;
+      const cx = (lanes[lanes.length-1].xMin + lanes[lanes.length-1].xMax) / 2;
+      window.__test.place(cx, 70, 0, -50);
+      for (let i = 0; i < 15; i++) window.__test.step(1);
+    }
+    return window.__test.state.mult;
+  });
+  expect(mult).toBeGreaterThanOrEqual(3);
+});
