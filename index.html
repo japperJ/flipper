@@ -54,7 +54,8 @@ const RIGHT_KICKBACK_EJECT = { x: 352, y: 510, vx: -340, vy: -580 };
 const GAMEPLAY_MODES = {
   'top-lanes': {
     id: 'top-lanes', name: 'Top Lanes',
-    laneCount: 5, laneLabels: null,
+    accentColor: null, // uses theme default
+    laneCount: 5, laneLabels: ['1','2','3','4','5'],
     onLaneComplete: 'multiplier',
     bumpers: [
       { c:{x:140,y:250}, r:22, gain:1.7, value:250 },
@@ -64,50 +65,53 @@ const GAMEPLAY_MODES = {
       { c:{x:320,y:220}, r:20, gain:1.7, value:250 },
     ],
     drops: [
-      { c:{x:170,y:350}, w:24, h:8, value:200 },
-      { c:{x:210,y:350}, w:24, h:8, value:200 },
-      { c:{x:250,y:350}, w:24, h:8, value:200 },
+      { c:{x:170,y:360}, w:24, h:8, value:200 },
+      { c:{x:210,y:360}, w:24, h:8, value:200 },
+      { c:{x:250,y:360}, w:24, h:8, value:200 },
     ],
   },
   'drop-bank': {
     id: 'drop-bank', name: 'Drop Bank',
-    laneCount: 3, laneLabels: null,
+    accentColor: '#ce93d8', // purple
+    laneCount: 3, laneLabels: ['A','B','C'],
     onLaneComplete: 'points-burst',
+    // 3 bumpers in a triangle — drops are the star of this mode
     bumpers: [
-      { c:{x:140,y:250}, r:22, gain:1.7, value:250 },
-      { c:{x:210,y:200}, r:22, gain:1.7, value:250 },
-      { c:{x:280,y:250}, r:22, gain:1.7, value:250 },
-      { c:{x:100,y:220}, r:20, gain:1.7, value:250 },
-      { c:{x:320,y:220}, r:20, gain:1.7, value:250 },
+      { c:{x:150,y:215}, r:22, gain:1.7, value:250 },
+      { c:{x:270,y:215}, r:22, gain:1.7, value:250 },
+      { c:{x:210,y:265}, r:24, gain:1.7, value:350 },
     ],
     drops: [
-      { c:{x:155,y:350}, w:24, h:8, value:200 },
-      { c:{x:190,y:350}, w:24, h:8, value:200 },
-      { c:{x:225,y:350}, w:24, h:8, value:200 },
-      { c:{x:260,y:350}, w:24, h:8, value:200 },
+      { c:{x:155,y:365}, w:24, h:8, value:200 },
+      { c:{x:190,y:365}, w:24, h:8, value:200 },
+      { c:{x:225,y:365}, w:24, h:8, value:200 },
+      { c:{x:260,y:365}, w:24, h:8, value:200 },
     ],
   },
   'spell-neon': {
     id: 'spell-neon', name: 'Spell Neon',
+    accentColor: '#b2ff59', // lime/neon green
     laneCount: 4, laneLabels: ['N','E','O','N'],
     onLaneComplete: 'jackpot',
+    // 4 bumpers in two staggered pairs — wide open centre
     bumpers: [
-      { c:{x:140,y:250}, r:22, gain:1.7, value:250 },
-      { c:{x:210,y:200}, r:22, gain:1.7, value:250 },
-      { c:{x:280,y:250}, r:22, gain:1.7, value:250 },
-      { c:{x:100,y:220}, r:20, gain:1.7, value:250 },
-      { c:{x:320,y:220}, r:20, gain:1.7, value:250 },
+      { c:{x:145,y:205}, r:20, gain:1.7, value:300 },
+      { c:{x:275,y:205}, r:20, gain:1.7, value:300 },
+      { c:{x:115,y:280}, r:22, gain:1.7, value:300 },
+      { c:{x:305,y:280}, r:22, gain:1.7, value:300 },
     ],
     drops: [
-      { c:{x:170,y:350}, w:24, h:8, value:200 },
-      { c:{x:210,y:350}, w:24, h:8, value:200 },
-      { c:{x:250,y:350}, w:24, h:8, value:200 },
+      { c:{x:175,y:365}, w:24, h:8, value:200 },
+      { c:{x:210,y:365}, w:24, h:8, value:200 },
+      { c:{x:245,y:365}, w:24, h:8, value:200 },
     ],
   },
   'bumper-frenzy': {
     id: 'bumper-frenzy', name: 'Bumper Frenzy',
-    laneCount: 3, laneLabels: null,
+    accentColor: '#ff6d00', // deep orange
+    laneCount: 3, laneLabels: ['X','X','X'],
     onLaneComplete: 'super-all',
+    // 6 bumpers in tight honeycomb — no drops, pure chaos
     bumpers: [
       { c:{x:100,y:240}, r:20, gain:1.7, value:250 },
       { c:{x:140,y:200}, r:22, gain:1.7, value:250 },
@@ -1114,11 +1118,12 @@ function spawnParticles(x, y, n, color){
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 
-function drawTopLanes(){
+function drawTopLanes(modeAccent){
   const lanes = topLaneList;
   if (!lanes.length) return;
   const theme = getActiveTheme();
   const palette = theme.palette;
+  const litColor = modeAccent || palette.bumperGlow;
   const totalW = 345; // xEnd - xStart = 355 - 10
   const laneW = totalW / lanes.length;
   const xStart = 10;
@@ -1134,28 +1139,29 @@ function drawTopLanes(){
     const cx = lx + laneW / 2;
 
     // Lane divider (left edge of each lane)
-    ctx.strokeStyle = lane.lit ? palette.bumperGlow : palette.lane;
-    ctx.shadowColor = lane.lit ? palette.bumperGlow : 'transparent';
+    ctx.strokeStyle = lane.lit ? litColor : palette.lane;
+    ctx.shadowColor = lane.lit ? litColor : 'transparent';
     ctx.shadowBlur = lane.lit ? 6 : 0;
     ctx.beginPath();
     ctx.moveTo(lx, yTop);
     ctx.lineTo(lx, yBot);
     ctx.stroke();
 
-    // Lane label
+    // Lane label — show label text if defined, else lane number
+    const labelText = lane.label != null ? lane.label : String(i + 1);
     ctx.font = '10px monospace';
     ctx.textAlign = 'center';
-    ctx.fillStyle = lane.lit ? palette.bumperGlow : palette.textPrimary;
-    ctx.shadowColor = lane.lit ? palette.bumperGlow : 'transparent';
+    ctx.fillStyle = lane.lit ? litColor : palette.textPrimary;
+    ctx.shadowColor = lane.lit ? litColor : 'transparent';
     ctx.shadowBlur = lane.lit ? 4 : 0;
-    ctx.fillText(lane.label, cx, yBot - 4);
+    ctx.fillText(labelText, cx, yBot - 4);
   }
 
   // Right edge of last lane — matches last lane's lit state
   const lastX = xStart + lanes.length * laneW;
   const lastLane = lanes[lanes.length - 1];
-  ctx.strokeStyle = lastLane.lit ? palette.bumperGlow : palette.lane;
-  ctx.shadowColor = lastLane.lit ? palette.bumperGlow : 'transparent';
+  ctx.strokeStyle = lastLane.lit ? litColor : palette.lane;
+  ctx.shadowColor = lastLane.lit ? litColor : 'transparent';
   ctx.shadowBlur = lastLane.lit ? 6 : 0;
   ctx.beginPath();
   ctx.moveTo(lastX, yTop);
@@ -1171,6 +1177,7 @@ function render(){
   const superBumpers = bumperSuperActive(nowSec);
   const theme = getActiveTheme();
   const palette = theme.palette;
+  const modeAccent = getActiveMode().accentColor || palette.bumperGlow;
   updateLightEffects(dtRender);
   trail.push({ x: ball.p.x, y: ball.p.y });
   if (trail.length > 12) trail.shift();
@@ -1253,8 +1260,8 @@ function render(){
       ctx.stroke();
       ctx.restore();
     }
-    ctx.fillStyle = bp.flash > 0 ? '#fff' : (superBumpers ? palette.insertOn : palette.bumperGlow);
-    ctx.shadowColor = superBumpers ? palette.insertOn : palette.bumperGlow;
+    ctx.fillStyle = bp.flash > 0 ? '#fff' : (superBumpers ? palette.insertOn : modeAccent);
+    ctx.shadowColor = superBumpers ? palette.insertOn : modeAccent;
     ctx.shadowBlur = bp.flash > 0 ? 24 : (superBumpers ? 20 : 12);
     ctx.beginPath(); ctx.arc(bp.c.x, bp.c.y, bp.r, 0, 2*Math.PI); ctx.fill();
     ctx.shadowBlur = 0;
@@ -1266,7 +1273,7 @@ function render(){
     ctx.fillText(String(bp.hits), bp.c.x, bp.c.y + 1);
     bp.flash = Math.max(0, bp.flash - 1/60);
   }
-   drawTopLanes();
+   drawTopLanes(modeAccent);
   for (const sl of slingList){
     ctx.strokeStyle = sl.flash > 0 ? '#fff' : palette.slingGlow;
     ctx.lineWidth = 6; ctx.lineCap = 'round';
@@ -1275,8 +1282,10 @@ function render(){
   }
   for (const dp of dropList){
     if (dp.down) continue;
-    ctx.fillStyle = palette.insertOn;
+    ctx.fillStyle = modeAccent;
+    ctx.shadowColor = modeAccent; ctx.shadowBlur = 4;
     ctx.fillRect(dp.c.x - dp.w/2, dp.c.y - dp.h/2, dp.w, dp.h);
+    ctx.shadowBlur = 0;
   }
   for (let i = 0; i < trail.length; i++){
     const t = trail[i];
