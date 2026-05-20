@@ -260,7 +260,16 @@ function setGameplayModeId(id){
 
 function applyGameplayModeFromMenu(id){
   if (!canApplyMenuSetting()) return false;
-  return setGameplayModeId(id);
+  const changed = settings.gameplayModeId !== id;
+  const ok = setGameplayModeId(id);
+  if (ok && changed){
+    // Table layout depends on the mode — rebuild immediately so the new layout
+    // is visible as soon as the menu closes, without waiting for game over.
+    clearTable();
+    buildTable();
+    serveBall();
+  }
+  return ok;
 }
 
 function saveSettings(){
