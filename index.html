@@ -605,6 +605,7 @@ function registerBumperHit(bp, nowSec){
 function physicsStep(dt){
   flippers.L.pressed = input.L;
   flippers.R.pressed = input.R;
+  if (flippers.miniL) flippers.miniL.pressed = input.L;
   const nowSec = performance.now()/1000;
   for (const dp of dropList){ if (dp.down && dp.downUntil && nowSec >= dp.downUntil){ dp.down = false; dp.downUntil = 0; } }
   if (state.comboUntil && nowSec > state.comboUntil){
@@ -632,7 +633,7 @@ function physicsStep(dt){
       const hit = sweepCircleArc(ball.p, d, ball.r, a.c, a.R, a.a0, a.a1, a.outward);
       if (hit && (!best || hit.toi < best.toi)){ best = hit; best.surface = a; }
     }
-    for (const f of [flippers.L, flippers.R]){
+    for (const f of [flippers.L, flippers.R, flippers.miniL].filter(Boolean)){
       const hit = flipperCollide(f, ball.p, d, ball.r);
       if (hit && (!best || hit.toi < best.toi)) best = { ...hit, surface: { kind:'flipper', restitution: 0.2 } };
     }
@@ -853,7 +854,7 @@ function buildTable(){
 buildTable();
 
 // ============ 5. FLIPPERS ============
-const flippers = { L: null, R: null };
+const flippers = { L: null, R: null, miniL: null };
 function makeFlipper(pivot, side){
   const restAngle = side==='L' ? 0.45 : Math.PI - 0.45;
   const upAngle   = side==='L' ? -0.45 : Math.PI + 0.45;
@@ -868,12 +869,27 @@ function makeFlipper(pivot, side){
 flippers.L = makeFlipper({x:135, y:620}, 'L');
 flippers.R = makeFlipper({x:285, y:620}, 'R');
 
+function makeMiniFlipperL(){
+  // Pivot on left wall at top of left outlane (y=492, x=30)
+  // Rest: angled right-downward (0.9 rad ≈ 52°, tip points right and slightly down)
+  // Up: angled right-upward (−0.4 rad ≈ −23°, tip points right and up → deflects ball inward)
+  return {
+    pivot: { x: 30, y: 492 },
+    side: 'L',
+    length: 38, tipR: 5, baseR: 8,
+    angle: 0.9, angleRest: 0.9, angleUp: -0.4,
+    angVel: 0, state: 'rest',
+    pressed: false,
+  };
+}
+flippers.miniL = makeMiniFlipperL();
+
 function flipperTip(f){
   return { x: f.pivot.x + Math.cos(f.angle)*f.length, y: f.pivot.y + Math.sin(f.angle)*f.length };
 }
 
 function flipperStep(dt){
-  for (const f of [flippers.L, flippers.R]){
+  for (const f of [flippers.L, flippers.R, flippers.miniL].filter(Boolean)){
     const target = f.pressed ? f.angleUp : f.angleRest;
     const delta = target - f.angle;
     const maxSpeed = f.pressed ? 18 : 10;  // rad/s
@@ -1134,11 +1150,11 @@ function render(){
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
   ctx.fillText('▼ DRAIN ▼', (DRAIN_LEFT + DRAIN_RIGHT) / 2, CONFIG.H - 2);
-  for (const f of [flippers.L, flippers.R]){
+  for (const f of [flippers.L, flippers.R, flippers.miniL].filter(Boolean)){
     const tip = flipperTip(f);
     ctx.strokeStyle = '#fd5';
     ctx.lineCap = 'round';
-    ctx.lineWidth = 14;
+    ctx.lineWidth = f === flippers.miniL ? 8 : 14;
     ctx.beginPath(); ctx.moveTo(f.pivot.x,f.pivot.y); ctx.lineTo(tip.x,tip.y); ctx.stroke();
   }
   for (const bp of bumperList){
@@ -1402,6 +1418,7 @@ window.__test = {
   isSoundEnabled(){ return settings.soundEnabled; },
   getGameplayModeId(){ return settings.gameplayModeId; },
   setGameplayModeFromMenu(id){ return applyGameplayModeFromMenu(id); },
+  get miniLFlipper(){ return flippers.miniL; },
   addScore(points){ applyScore(points); },
   forcePhase(phase){ state.phase = phase; },
   dispatchThemeEvent(type, payload){ emitThemeEvent(type, payload); },

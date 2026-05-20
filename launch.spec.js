@@ -736,3 +736,39 @@ test('top lanes: spell-neon completion fires jackpot and doubles base', async ({
   expect(r.scoreDelta).toBeGreaterThan(0);
   expect(r.jackpotBase).toBe(10000); // doubled from 5000
 });
+test('mini flipper: pressing left key sweeps miniL flipper toward active angle', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.restart();
+    const angleRest = window.__test.miniLFlipper.angle;
+    // Press left key and step a few frames
+    window.__test.press('z');
+    for (let i = 0; i < 10; i++) window.__test.step(1);
+    const angleActive = window.__test.miniLFlipper.angle;
+    window.__test.release('z');
+    return { angleRest, angleActive };
+  });
+  expect(r.angleRest).toBeCloseTo(0.9, 1);
+  expect(r.angleActive).toBeLessThan(r.angleRest); // sweeping toward -0.4
+});
+
+test('mini flipper: ball in outlane above pivot is deflected inward when active', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.restart();
+    // Place ball just above the flipper pivot (y=492), falling down into the outlane
+    window.__test.place(18, 475, 0, 80);
+    window.__test.press('z'); // flipper sweeps up toward -0.4 and intercepts ball
+    let deflected = false;
+    for (let i = 0; i < 90; i++){
+      window.__test.step(1);
+      const b = window.__test.ball;
+      if (b.v.x > 50) { deflected = true; break; }
+    }
+    window.__test.release('z');
+    return deflected;
+  });
+  expect(r).toBe(true);
+});
