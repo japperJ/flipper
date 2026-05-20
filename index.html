@@ -47,6 +47,79 @@ const CABINET_MENU_RULE_LINES = [
   '500000 SCORE  EXTRA BALL',
 ];
 
+const DEFAULT_GAMEPLAY_MODE_ID = 'top-lanes';
+const GAMEPLAY_MODE_STORAGE_KEY = 'flipper.gameplayModeId';
+const RIGHT_KICKBACK_EJECT = { x: 352, y: 510, vx: -340, vy: -580 };
+
+const GAMEPLAY_MODES = {
+  'top-lanes': {
+    id: 'top-lanes', name: 'Top Lanes',
+    laneCount: 5, laneLabels: null,
+    onLaneComplete: 'multiplier',
+    bumpers: [
+      { c:{x:140,y:250}, r:22, gain:1.7, value:250 },
+      { c:{x:210,y:200}, r:22, gain:1.7, value:250 },
+      { c:{x:280,y:250}, r:22, gain:1.7, value:250 },
+      { c:{x:100,y:220}, r:20, gain:1.7, value:250 },
+      { c:{x:320,y:220}, r:20, gain:1.7, value:250 },
+    ],
+    drops: [
+      { c:{x:170,y:350}, w:24, h:8, value:200 },
+      { c:{x:210,y:350}, w:24, h:8, value:200 },
+      { c:{x:250,y:350}, w:24, h:8, value:200 },
+    ],
+  },
+  'drop-bank': {
+    id: 'drop-bank', name: 'Drop Bank',
+    laneCount: 3, laneLabels: null,
+    onLaneComplete: 'points-burst',
+    bumpers: [
+      { c:{x:140,y:250}, r:22, gain:1.7, value:250 },
+      { c:{x:210,y:200}, r:22, gain:1.7, value:250 },
+      { c:{x:280,y:250}, r:22, gain:1.7, value:250 },
+      { c:{x:100,y:220}, r:20, gain:1.7, value:250 },
+      { c:{x:320,y:220}, r:20, gain:1.7, value:250 },
+    ],
+    drops: [
+      { c:{x:155,y:350}, w:24, h:8, value:200 },
+      { c:{x:190,y:350}, w:24, h:8, value:200 },
+      { c:{x:225,y:350}, w:24, h:8, value:200 },
+      { c:{x:260,y:350}, w:24, h:8, value:200 },
+    ],
+  },
+  'spell-neon': {
+    id: 'spell-neon', name: 'Spell Neon',
+    laneCount: 4, laneLabels: ['N','E','O','N'],
+    onLaneComplete: 'jackpot',
+    bumpers: [
+      { c:{x:140,y:250}, r:22, gain:1.7, value:250 },
+      { c:{x:210,y:200}, r:22, gain:1.7, value:250 },
+      { c:{x:280,y:250}, r:22, gain:1.7, value:250 },
+      { c:{x:100,y:220}, r:20, gain:1.7, value:250 },
+      { c:{x:320,y:220}, r:20, gain:1.7, value:250 },
+    ],
+    drops: [
+      { c:{x:170,y:350}, w:24, h:8, value:200 },
+      { c:{x:210,y:350}, w:24, h:8, value:200 },
+      { c:{x:250,y:350}, w:24, h:8, value:200 },
+    ],
+  },
+  'bumper-frenzy': {
+    id: 'bumper-frenzy', name: 'Bumper Frenzy',
+    laneCount: 3, laneLabels: null,
+    onLaneComplete: 'super-all',
+    bumpers: [
+      { c:{x:100,y:240}, r:20, gain:1.7, value:250 },
+      { c:{x:140,y:200}, r:22, gain:1.7, value:250 },
+      { c:{x:210,y:180}, r:22, gain:1.7, value:250 },
+      { c:{x:210,y:260}, r:20, gain:1.7, value:250 },
+      { c:{x:280,y:200}, r:22, gain:1.7, value:250 },
+      { c:{x:320,y:240}, r:20, gain:1.7, value:250 },
+    ],
+    drops: [],
+  },
+};
+
 const THEME_PACKS = {
   'sunburst-classic': {
     id: 'sunburst-classic',
@@ -128,6 +201,7 @@ const THEME_PACKS = {
 const settings = {
   themeId: DEFAULT_THEME_ID,
   soundEnabled: true,
+  gameplayModeId: DEFAULT_GAMEPLAY_MODE_ID,
 };
 
 const menu = {
@@ -142,21 +216,45 @@ function getActiveTheme(){
   return THEME_PACKS[settings.themeId] || THEME_PACKS[DEFAULT_THEME_ID];
 }
 
+function isGameplayModeIdValid(id){
+  return Object.prototype.hasOwnProperty.call(GAMEPLAY_MODES, id);
+}
+
+function getActiveMode(){
+  return GAMEPLAY_MODES[settings.gameplayModeId] || GAMEPLAY_MODES[DEFAULT_GAMEPLAY_MODE_ID];
+}
+
+function setGameplayModeId(id){
+  if (!isGameplayModeIdValid(id)) return false;
+  settings.gameplayModeId = id;
+  saveSettings();
+  return true;
+}
+
+function applyGameplayModeFromMenu(id){
+  if (!canApplyThemeFromMenu()) return false;
+  return setGameplayModeId(id);
+}
+
 function saveSettings(){
   localStorage.setItem(THEME_STORAGE_KEY, settings.themeId);
   localStorage.setItem(SOUND_STORAGE_KEY, String(settings.soundEnabled));
+  localStorage.setItem(GAMEPLAY_MODE_STORAGE_KEY, settings.gameplayModeId);
 }
 
 function loadSettings(){
   const rawTheme = localStorage.getItem(THEME_STORAGE_KEY);
   const rawSound = localStorage.getItem(SOUND_STORAGE_KEY);
+  const rawMode  = localStorage.getItem(GAMEPLAY_MODE_STORAGE_KEY);
 
   settings.themeId = isThemeIdValid(rawTheme) ? rawTheme : DEFAULT_THEME_ID;
   const soundValid = rawSound === 'true' || rawSound === 'false';
   settings.soundEnabled = soundValid ? rawSound === 'true' : true;
+  settings.gameplayModeId = isGameplayModeIdValid(rawMode) ? rawMode : DEFAULT_GAMEPLAY_MODE_ID;
 
   if (!isThemeIdValid(rawTheme)) localStorage.setItem(THEME_STORAGE_KEY, settings.themeId);
   if (!soundValid) localStorage.setItem(SOUND_STORAGE_KEY, String(settings.soundEnabled));
+  if (!isGameplayModeIdValid(rawMode)) localStorage.setItem(GAMEPLAY_MODE_STORAGE_KEY, settings.gameplayModeId);
 }
 
 function setThemeId(nextId){
@@ -1220,6 +1318,8 @@ window.__test = {
   setSoundFromMenu(enabled){ return applySoundFromMenu(enabled); },
   getThemeId(){ return settings.themeId; },
   isSoundEnabled(){ return settings.soundEnabled; },
+  getGameplayModeId(){ return settings.gameplayModeId; },
+  setGameplayModeFromMenu(id){ return applyGameplayModeFromMenu(id); },
   addScore(points){ applyScore(points); },
   forcePhase(phase){ state.phase = phase; },
   dispatchThemeEvent(type, payload){ emitThemeEvent(type, payload); },

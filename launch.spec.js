@@ -555,3 +555,60 @@ test('sound: invalid persisted value falls back to enabled', async ({ page }) =>
   const enabled = await page.evaluate(() => window.__test.isSoundEnabled());
   expect(enabled).toBe(true);
 });
+
+test('gameplay mode: default is top-lanes', async ({ page }) => {
+  await page.goto(URL);
+  const id = await page.evaluate(() => window.__test.getGameplayModeId());
+  expect(id).toBe('top-lanes');
+});
+
+test('gameplay mode: can switch modes in cabinet menu', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    const ok1 = window.__test.setGameplayModeFromMenu('spell-neon');
+    const id1 = window.__test.getGameplayModeId();
+    const ok2 = window.__test.setGameplayModeFromMenu('bumper-frenzy');
+    const id2 = window.__test.getGameplayModeId();
+    return { ok1, id1, ok2, id2 };
+  });
+  expect(r.ok1).toBe(true);
+  expect(r.id1).toBe('spell-neon');
+  expect(r.ok2).toBe(true);
+  expect(r.id2).toBe('bumper-frenzy');
+});
+
+test('gameplay mode: invalid id is rejected', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    const ok = window.__test.setGameplayModeFromMenu('not-a-mode');
+    return { ok, id: window.__test.getGameplayModeId() };
+  });
+  expect(r.ok).toBe(false);
+  expect(r.id).toBe('top-lanes');
+});
+
+test('gameplay mode: persists across reload', async ({ page }) => {
+  await page.goto(URL);
+  await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('drop-bank');
+  });
+  await page.reload();
+  const id = await page.evaluate(() => window.__test.getGameplayModeId());
+  expect(id).toBe('drop-bank');
+});
+
+test('gameplay mode: invalid persisted value falls back to default', async ({ page }) => {
+  await page.goto(URL);
+  await page.evaluate(() => {
+    localStorage.setItem('flipper.gameplayModeId', 'garbage');
+  });
+  await page.reload();
+  const id = await page.evaluate(() => window.__test.getGameplayModeId());
+  expect(id).toBe('top-lanes');
+});
