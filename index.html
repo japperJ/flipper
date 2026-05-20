@@ -449,7 +449,7 @@ function clearTable(){
 }
 
 function serveBall(){
-  ball.p = { x: 400, y: 680 };
+  ball.p = { x: 400, y: 700 };
   ball.v = { x: 0, y: 0 };
   state.phase = 'ready';
   state.spellJackpotBase = 5000;
@@ -730,6 +730,7 @@ function physicsStep(dt){
         applyScore(clearBonus);
         spawnFloat('DROP BONUS +' + clearBonus, CONFIG.W/2, 340, '#fc4');
         state.kickback = true; // rearm kickback on every bank clear
+        state.rightKickback = true;
         for (const d of dropList){ d.down = false; d.downUntil = 0; }
       }
       remaining *= (1 - best.toi);
@@ -776,6 +777,18 @@ function physicsStep(dt){
     state.kickbackFlash = 0.8;
     spawnParticles(26, 620, 24, '#0ff');
     spawnFloat('KICKBACK!', 92, 540, '#0ff');
+    shake = 12;
+  }
+  // Right kickback (symmetric to left)
+  if (state.rightKickback && ball.p.x > 393 && ball.p.x < 418 && ball.p.y > 550 && ball.p.y < 700 && ball.v.y > 0){
+    ball.p.x = RIGHT_KICKBACK_EJECT.x;
+    ball.p.y = RIGHT_KICKBACK_EJECT.y;
+    ball.v.x = RIGHT_KICKBACK_EJECT.vx;
+    ball.v.y = RIGHT_KICKBACK_EJECT.vy;
+    state.rightKickback = false;
+    state.rightKickbackFlash = 0.8;
+    spawnParticles(RIGHT_KICKBACK_EJECT.x, 600, 24, '#0ff');
+    spawnFloat('KICKBACK!', CONFIG.W - 88, 540, '#0ff');
     shake = 12;
   }
   handleDrain();
@@ -1249,7 +1262,7 @@ function render(){
   // HUD panels keep text readable against rails/walls and avoid top-right crowding.
   ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
   ctx.fillRect(6, 6, 248, 78);
-  ctx.fillRect(300, 6, 114, 66);
+  ctx.fillRect(300, 6, 114, 82);
 
   ctx.fillStyle = palette.textAccent;
   ctx.font = "10px 'Press Start 2P', monospace";
@@ -1280,6 +1293,19 @@ function render(){
     ctx.fillText('KBCK', hudRightX, 62);
     ctx.globalAlpha = 1;
     state.kickbackFlash = Math.max(0, state.kickbackFlash - 1/60);
+  }
+  // Right kickback indicator
+  if (state.rightKickback){
+    ctx.fillStyle = palette.bumperGlow;
+    ctx.shadowColor = palette.bumperGlow; ctx.shadowBlur = 6;
+    ctx.fillText('R-KB', hudRightX, 76);
+    ctx.shadowBlur = 0;
+  } else if (state.rightKickbackFlash > 0){
+    ctx.globalAlpha = state.rightKickbackFlash / 0.8;
+    ctx.fillStyle = palette.bumperGlow;
+    ctx.fillText('R-KB', hudRightX, 76);
+    ctx.globalAlpha = 1;
+    state.rightKickbackFlash = Math.max(0, state.rightKickbackFlash - 1/60);
   }
   if (superBumpers){
     ctx.fillStyle = palette.bumperGlow;

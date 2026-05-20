@@ -772,3 +772,29 @@ test('mini flipper: ball in outlane above pivot is deflected inward when active'
   });
   expect(r).toBe(true);
 });
+
+
+test('right kickback: armed right outlane relaunches ball back into play', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.restart();
+    window.__test.state.saverUntil = 0;
+    // x=405, actually inside outlane channel (past the separator wall at x≈394)
+    window.__test.place(405, 600, 0, 180);
+    let kickbackFired = false;
+    let movedLeft = false;
+    for (let i = 0; i < 600; i++){
+      window.__test.step(1);
+      const b = window.__test.ball;
+      const s = window.__test.state;
+      if (!s.rightKickback) kickbackFired = true;
+      if (kickbackFired && b.p.x < 360) movedLeft = true;
+      if (s.balls < 3) break;
+    }
+    return { kickbackFired, movedLeft, balls: window.__test.state.balls };
+  });
+  expect(r.kickbackFired).toBe(true);
+  expect(r.movedLeft).toBe(true);
+  expect(r.balls).toBe(3);
+});
