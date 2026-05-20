@@ -682,6 +682,7 @@ function physicsStep(dt){
       if (hit && (!best || hit.toi < best.toi)){ best = hit; best.surface = a; }
     }
     for (const f of [flippers.L, flippers.R, flippers.miniL].filter(Boolean)){
+      if (f === flippers.miniL && !f.pressed && Math.abs(f.angVel) < 0.01) continue;
       const hit = flipperCollide(f, ball.p, d, ball.r);
       if (hit && (!best || hit.toi < best.toi)) best = { ...hit, surface: { kind:'flipper', restitution: 0.2 } };
     }

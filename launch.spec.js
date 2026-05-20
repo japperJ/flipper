@@ -874,6 +874,33 @@ test('mini flipper: ball in outlane above pivot is deflected inward when active'
   expect(r).toBe(true);
 });
 
+test('mini flipper: resting left mini flipper does not push ball into wall pocket', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('bumper-frenzy');
+    window.__test.restart();
+    window.__test.state.saverUntil = 0;
+    window.__test.state.ballWasLaunched = true;
+    window.__test.state.kickback = false;
+    // Screenshot regression: resting mini flipper tip sits beside this pocket.
+    window.__test.place(45, 512, 0, 0);
+    let minX = window.__test.ball.p.x;
+    for (let i = 0; i < 18; i++){
+      window.__test.step(1);
+      minX = Math.min(minX, window.__test.ball.p.x);
+    }
+    return {
+      minX,
+      x: window.__test.ball.p.x,
+      y: window.__test.ball.p.y,
+    };
+  });
+  expect(r.minX).toBeGreaterThanOrEqual(40);
+  expect(r.y).toBeGreaterThan(525);
+});
+
 
 test('right kickback: armed right outlane relaunches ball back into play', async ({ page }) => {
   await page.goto(URL);
