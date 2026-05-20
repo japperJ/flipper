@@ -673,6 +673,73 @@ test('table: spell-neon mode has 4 top lanes with labels N E O N', async ({ page
   expect(r).toEqual(['N','E','O','N']);
 });
 
+test('table: mode guide rails stay clear of sling outlanes', async ({ page }) => {
+  await page.goto(URL);
+  for (const modeId of ['drop-bank','spell-neon','bumper-frenzy']){
+    const guides = await page.evaluate((id) => {
+      window.__test.pause();
+      window.__test.openMenu();
+      window.__test.setGameplayModeFromMenu(id);
+      window.__test.restart();
+      return window.__test.segments
+        .filter(s => s.kind === 'guide')
+        .map(s => ({ a: s.a, b: s.b }));
+    }, modeId);
+    expect(guides).toHaveLength(2);
+    for (const g of guides){
+      expect(Math.max(g.a.y, g.b.y)).toBeLessThanOrEqual(420);
+      expect(Math.min(g.a.x, g.b.x)).toBeGreaterThanOrEqual(78);
+      expect(Math.max(g.a.x, g.b.x)).toBeLessThanOrEqual(342);
+    }
+  }
+});
+
+test('physics: left sling corridor does not trap the ball', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('bumper-frenzy');
+    window.__test.restart();
+    window.__test.place(48, 520, 0, 0);
+    let escaped = false;
+    let active = false;
+    for (let i = 0; i < 90; i++){
+      window.__test.step(1);
+      const b = window.__test.ball;
+      const speed = Math.hypot(b.v.x, b.v.y);
+      if (b.p.x > 58 && window.__test.state.balls === 3) escaped = true;
+      if (speed > 20 && window.__test.state.balls === 3) active = true;
+    }
+    return { escaped, active };
+  });
+  expect(r.escaped).toBe(true);
+  expect(r.active).toBe(true);
+});
+
+test('physics: right sling corridor does not trap the ball', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('spell-neon');
+    window.__test.restart();
+    window.__test.place(372, 530, 0, 0);
+    let escaped = false;
+    let active = false;
+    for (let i = 0; i < 90; i++){
+      window.__test.step(1);
+      const b = window.__test.ball;
+      const speed = Math.hypot(b.v.x, b.v.y);
+      if (b.p.x < 362 && window.__test.state.balls === 3) escaped = true;
+      if (speed > 20 && window.__test.state.balls === 3) active = true;
+    }
+    return { escaped, active };
+  });
+  expect(r.escaped).toBe(true);
+  expect(r.active).toBe(true);
+});
+
 test('top lanes: ball at top lights the lane it passes through', async ({ page }) => {
   await page.goto(URL);
   const r = await page.evaluate(() => {

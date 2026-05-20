@@ -11,11 +11,11 @@
 </style>
 </head>
 <body>
-<canvas id="c" width="420" height="720"></canvas>
+<canvas id="c" width="420" height="780"></canvas>
 <script type="module">
 // ============ 1. CONFIG ============
 const CONFIG = {
-  W: 420, H: 720, BALL_R: 11,
+  W: 420, H: 720, VIEW_H: 780, HUD_H: 60, TABLE_Y: 60, BALL_R: 11,
   GRAVITY: 900, DRAG_PER_SEC: 0.9995,
   FIXED_DT: 1/240, MAX_SUBSTEPS: 4,
 };
@@ -93,10 +93,10 @@ const GAMEPLAY_MODES = {
       { c:{x:272,y:304}, w:36, h:14, value:400 },  // far-right arm of V
     ],
     arcs: [],
-    // Funnel walls from sling tops toward the V-tip — forces ball through the chevron
+    // Short funnel walls toward the V-tip — stops above sling zone to avoid side pockets
     guides: [
-      { a:{x:55, y:490}, b:{x:108, y:338} },
-      { a:{x:365,y:490}, b:{x:312, y:338} },
+      { a:{x:92, y:415}, b:{x:118, y:338} },
+      { a:{x:328,y:415}, b:{x:302, y:338} },
     ],
   },
   'spell-neon': {
@@ -122,10 +122,10 @@ const GAMEPLAY_MODES = {
     arcs: [
       { c:{x:210,y:252}, R:38, a0:0, a1:Math.PI*2, outward:true, restitution:0.85 },
     ],
-    // Steep guide rails from sling tops push ball up toward the letter bumpers
+    // Short guide rails push ball up toward the letter bumpers without crowding outlanes
     guides: [
-      { a:{x:55, y:490}, b:{x:78, y:335} },
-      { a:{x:365,y:490}, b:{x:342, y:335} },
+      { a:{x:92, y:420}, b:{x:78, y:335} },
+      { a:{x:328,y:420}, b:{x:342, y:335} },
     ],
   },
   'bumper-frenzy': {
@@ -151,8 +151,8 @@ const GAMEPLAY_MODES = {
     ],
     // Guide rails funnel ball into the ring from both sides
     guides: [
-      { a:{x:55, y:490}, b:{x:118, y:315} },
-      { a:{x:365,y:490}, b:{x:302, y:315} },
+      { a:{x:92, y:418}, b:{x:118, y:315} },
+      { a:{x:328,y:418}, b:{x:302, y:315} },
     ],
   },
 };
@@ -888,6 +888,8 @@ function buildTable(){
   addSegment({x:55,  y:490}, {x:38,  y:490});  // horizontal cap (ball-test zone stays flat)
   addSegment({x:38,  y:490}, {x:32,  y:483});  // tiny diagonal to break the 90° pocket corner
   addSegment({x:365, y:490}, {x:388, y:490});
+  // Anti-pocket deflector: closes the narrow corridor between left sling and left inner wall
+  addSegment({x:45, y:512}, {x:62, y:544});
   // Anti-pocket deflector: closes the narrow corridor between right sling and right inner wall
   addSegment({x:375, y:512}, {x:358, y:544});
   addSegment({x:115, y:600}, {x:120, y:618});
@@ -1241,8 +1243,9 @@ function render(){
   if (shake > 0) shake = Math.max(0, shake - dtRender * 30);
 
   ctx.fillStyle = palette.bg;
-  ctx.fillRect(0,0,CONFIG.W,CONFIG.H);
+  ctx.fillRect(0,0,CONFIG.W,CONFIG.VIEW_H);
   ctx.save();
+  ctx.translate(0, CONFIG.TABLE_Y);
   if (shake > 0){
     ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake);
   }
@@ -1400,38 +1403,38 @@ function render(){
   ctx.textAlign = 'start';
   ctx.restore();
 
-  // HUD panels keep text readable against rails/walls and avoid top-right crowding.
+  // HUD panels live above the translated board so they never cover gameplay.
   ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-  ctx.fillRect(6, 6, 248, 96);
-  ctx.fillRect(300, 6, 114, 82);
+  ctx.fillRect(6, 4, 252, 54);
+  ctx.fillRect(292, 4, 122, 54);
 
   ctx.fillStyle = palette.textAccent;
   ctx.font = "10px 'Press Start 2P', monospace";
   ctx.fillText('NEON PINBALL', 8, 16);
   ctx.fillStyle = palette.textPrimary;
-  ctx.fillText('SCORE ' + state.score.toString().padStart(7,'0'), 8, 34);
-  ctx.fillText('BALLS ' + state.balls, 8, 48);
+  ctx.fillText('SCORE ' + state.score.toString().padStart(7,'0'), 8, 32);
+  ctx.fillText('BALLS ' + state.balls, 8, 46);
   if (state.dropCycles > 0){
     ctx.fillStyle = palette.insertOn;
-    ctx.fillText('BNK x' + state.dropCycles, 8, 62);
+    ctx.fillText('BNK x' + state.dropCycles, 150, 46);
   }
   const hudRightX = 364;
   ctx.textAlign = 'right';
   ctx.fillStyle = state.mult > 1 ? palette.insertOn : '#888';
-  ctx.fillText('MULT x' + state.mult, hudRightX, 34);
+  ctx.fillText('MULT x' + state.mult, hudRightX, 16);
   if (state.saverUntil > nowSec){
     ctx.fillStyle = '#5f5';
-    ctx.fillText('SAVER', hudRightX, 48);
+    ctx.fillText('SAVER', hudRightX, 30);
   }
   if (state.kickback){
     ctx.fillStyle = palette.bumperGlow;
     ctx.shadowColor = palette.bumperGlow; ctx.shadowBlur = 6;
-    ctx.fillText('KBCK', hudRightX, 62);
+    ctx.fillText('KBCK', hudRightX, 44);
     ctx.shadowBlur = 0;
   } else if (state.kickbackFlash > 0){
     ctx.globalAlpha = state.kickbackFlash / 0.8;
     ctx.fillStyle = palette.bumperGlow;
-    ctx.fillText('KBCK', hudRightX, 62);
+    ctx.fillText('KBCK', hudRightX, 44);
     ctx.globalAlpha = 1;
     state.kickbackFlash = Math.max(0, state.kickbackFlash - 1/60);
   }
@@ -1439,12 +1442,12 @@ function render(){
   if (state.rightKickback){
     ctx.fillStyle = palette.bumperGlow;
     ctx.shadowColor = palette.bumperGlow; ctx.shadowBlur = 6;
-    ctx.fillText('R-KB', hudRightX, 76);
+    ctx.fillText('R-KB', hudRightX, 56);
     ctx.shadowBlur = 0;
   } else if (state.rightKickbackFlash > 0){
     ctx.globalAlpha = state.rightKickbackFlash / 0.8;
     ctx.fillStyle = palette.bumperGlow;
-    ctx.fillText('R-KB', hudRightX, 76);
+    ctx.fillText('R-KB', hudRightX, 56);
     ctx.globalAlpha = 1;
     state.rightKickbackFlash = Math.max(0, state.rightKickbackFlash - 1/60);
   }
@@ -1453,7 +1456,7 @@ function render(){
     ctx.textAlign = 'center';
     ctx.shadowColor = palette.bumperGlow;
     ctx.shadowBlur = 8;
-    ctx.fillText('SUPER BUMPERS', CONFIG.W/2, 64);
+    ctx.fillText('SUPER BUMPERS', CONFIG.W/2, 56);
     ctx.shadowBlur = 0;
     ctx.textAlign = 'start';
   }
@@ -1471,15 +1474,12 @@ function render(){
   }
 
   ctx.fillStyle = palette.textAccent;
-  ctx.font = "8px 'Press Start 2P', monospace";
+  ctx.font = "7px 'Press Start 2P', monospace";
   ctx.textAlign = 'start';
-  ctx.fillText(theme.name.toUpperCase(), 8, 76);
-  ctx.fillText(getActiveMode().name.toUpperCase(), 8, 90);
-  // Mode objective hint — smaller, uses accent color if available
   const activeMode = getActiveMode();
+  ctx.fillText(theme.name.toUpperCase(), 8, 58);
   ctx.fillStyle = activeMode.accentColor || palette.textAccent;
-  ctx.font = "6px 'Press Start 2P', monospace";
-  ctx.fillText(activeMode.objective, 8, 102);
+  ctx.fillText(activeMode.name.toUpperCase(), 150, 58);
 
   const cabinetHint = getCabinetMenuIndicatorText();
   const hintY = CONFIG.H - 24;
@@ -1583,6 +1583,7 @@ const emitThemeEvent = dispatchThemeEvent;
 window.__test = {
   get ball(){ return ball; },
   get state(){ return state; },
+  get segments(){ return segments; },
   get bumpers(){ return bumperList; },
   get topLanes(){ return topLaneList; },
   get drops(){ return dropList; },
