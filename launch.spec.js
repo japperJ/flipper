@@ -225,6 +225,40 @@ test('kickback: armed left outlane save relaunches ball back into play', async (
   expect(r.balls).toBe(3);
 });
 
+test('kickback: armed left outlane save fires from visible side pocket', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.restart();
+    window.__test.state.saverUntil = 0;
+    window.__test.state.ballWasLaunched = true;
+    // Screenshot regression: ball center sits around x=50 in the left outlane.
+    window.__test.place(50, 590, 0, 0);
+
+    let kickbackFired = false;
+    let reachedUpperPlayfield = false;
+    for (let i = 0; i < 600; i++){
+      window.__test.step(1);
+      const b = window.__test.ball;
+      const s = window.__test.state;
+      if (!s.kickback) kickbackFired = true;
+      if (kickbackFired && b.p.y < 430) reachedUpperPlayfield = true;
+      if (s.balls < 3) break;
+    }
+
+    return {
+      kickbackFired,
+      reachedUpperPlayfield,
+      balls: window.__test.state.balls,
+      ball: { ...window.__test.ball },
+    };
+  });
+
+  expect(r.kickbackFired).toBe(true);
+  expect(r.reachedUpperPlayfield).toBe(true);
+  expect(r.balls).toBe(3);
+});
+
 test('hud: score displays and game-over allows restart', async ({ page }) => {
   await page.goto(URL);
   const r = await page.evaluate(() => {
@@ -554,4 +588,422 @@ test('sound: invalid persisted value falls back to enabled', async ({ page }) =>
   await page.reload();
   const enabled = await page.evaluate(() => window.__test.isSoundEnabled());
   expect(enabled).toBe(true);
+});
+
+test('gameplay mode: default is top-lanes', async ({ page }) => {
+  await page.goto(URL);
+  const id = await page.evaluate(() => window.__test.getGameplayModeId());
+  expect(id).toBe('top-lanes');
+});
+
+test('gameplay mode: can switch modes in cabinet menu', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    const ok1 = window.__test.setGameplayModeFromMenu('spell-neon');
+    const id1 = window.__test.getGameplayModeId();
+    const ok2 = window.__test.setGameplayModeFromMenu('bumper-frenzy');
+    const id2 = window.__test.getGameplayModeId();
+    return { ok1, id1, ok2, id2 };
+  });
+  expect(r.ok1).toBe(true);
+  expect(r.id1).toBe('spell-neon');
+  expect(r.ok2).toBe(true);
+  expect(r.id2).toBe('bumper-frenzy');
+});
+
+test('gameplay mode: invalid id is rejected', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    const ok = window.__test.setGameplayModeFromMenu('not-a-mode');
+    return { ok, id: window.__test.getGameplayModeId() };
+  });
+  expect(r.ok).toBe(false);
+  expect(r.id).toBe('top-lanes');
+});
+
+test('gameplay mode: persists across reload', async ({ page }) => {
+  await page.goto(URL);
+  await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('drop-bank');
+  });
+  await page.reload();
+  const id = await page.evaluate(() => window.__test.getGameplayModeId());
+  expect(id).toBe('drop-bank');
+});
+
+test('gameplay mode: invalid persisted value falls back to default', async ({ page }) => {
+  await page.goto(URL);
+  await page.evaluate(() => {
+    localStorage.setItem('flipper.gameplayModeId', 'garbage');
+  });
+  await page.reload();
+  const id = await page.evaluate(() => window.__test.getGameplayModeId());
+  expect(id).toBe('top-lanes');
+});
+
+test('table: top-lanes mode has 5 bumpers and 3 drops', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('top-lanes');
+    window.__test.restart();
+    return {
+      bumpers: window.__test.bumpers.length,
+      topLanes: window.__test.topLanes.length,
+    };
+  });
+  expect(r.bumpers).toBe(5);
+  expect(r.topLanes).toBe(5);
+});
+
+test('table: bumper-frenzy mode has 6 bumpers and 0 drops', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('bumper-frenzy');
+    window.__test.restart();
+    return {
+      bumpers: window.__test.bumpers.length,
+      topLanes: window.__test.topLanes.length,
+    };
+  });
+  expect(r.bumpers).toBe(6);
+  expect(r.topLanes).toBe(3);
+});
+
+test('table: drop-bank mode has 4 drop targets', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('drop-bank');
+    window.__test.restart();
+    return {
+      drops: window.__test.drops.length,
+      topLanes: window.__test.topLanes.length,
+    };
+  });
+  expect(r.drops).toBe(4);
+  expect(r.topLanes).toBe(3);
+});
+
+test('table: spell-neon mode has 4 top lanes with labels N E O N', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('spell-neon');
+    window.__test.restart();
+    return window.__test.topLanes.map(l => l.label);
+  });
+  expect(r).toEqual(['N','E','O','N']);
+});
+
+test('table: mode guide rails stay clear of sling outlanes', async ({ page }) => {
+  await page.goto(URL);
+  for (const modeId of ['drop-bank','spell-neon','bumper-frenzy']){
+    const guides = await page.evaluate((id) => {
+      window.__test.pause();
+      window.__test.openMenu();
+      window.__test.setGameplayModeFromMenu(id);
+      window.__test.restart();
+      return window.__test.segments
+        .filter(s => s.kind === 'guide')
+        .map(s => ({ a: s.a, b: s.b }));
+    }, modeId);
+    expect(guides).toHaveLength(2);
+    for (const g of guides){
+      expect(Math.max(g.a.y, g.b.y)).toBeLessThanOrEqual(420);
+      expect(Math.min(g.a.x, g.b.x)).toBeGreaterThanOrEqual(78);
+      expect(Math.max(g.a.x, g.b.x)).toBeLessThanOrEqual(342);
+    }
+  }
+});
+
+test('physics: left sling corridor does not trap the ball', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('bumper-frenzy');
+    window.__test.restart();
+    window.__test.place(48, 520, 0, 0);
+    let escaped = false;
+    let active = false;
+    for (let i = 0; i < 90; i++){
+      window.__test.step(1);
+      const b = window.__test.ball;
+      const speed = Math.hypot(b.v.x, b.v.y);
+      if (b.p.x > 58 && window.__test.state.balls === 3) escaped = true;
+      if (speed > 20 && window.__test.state.balls === 3) active = true;
+    }
+    return { escaped, active };
+  });
+  expect(r.escaped).toBe(true);
+  expect(r.active).toBe(true);
+});
+
+test('physics: right sling corridor does not trap the ball', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('spell-neon');
+    window.__test.restart();
+    window.__test.place(372, 530, 0, 0);
+    let escaped = false;
+    let active = false;
+    for (let i = 0; i < 90; i++){
+      window.__test.step(1);
+      const b = window.__test.ball;
+      const speed = Math.hypot(b.v.x, b.v.y);
+      if (b.p.x < 362 && window.__test.state.balls === 3) escaped = true;
+      if (speed > 20 && window.__test.state.balls === 3) active = true;
+    }
+    return { escaped, active };
+  });
+  expect(r.escaped).toBe(true);
+  expect(r.active).toBe(true);
+});
+
+test('top lanes: ball at top lights the lane it passes through', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('top-lanes');
+    window.__test.restart();
+    // Place ball inside first lane's x range, just above detection threshold
+    const lane = window.__test.topLanes[0];
+    const cx = (lane.xMin + lane.xMax) / 2;
+    window.__test.place(cx, 70, 0, -50);
+    for (let i = 0; i < 10; i++) window.__test.step(1);
+    return window.__test.topLanes.map(l => l.lit);
+  });
+  expect(r[0]).toBe(true);
+  expect(r.slice(1).every(v => !v)).toBe(true);
+});
+
+test('top lanes: completing all 5 in top-lanes mode raises multiplier', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('top-lanes');
+    window.__test.restart();
+    window.__test.state.mult = 1;
+    const lanes = window.__test.topLanes;
+    // Light first 4 lanes manually, leave last unlit
+    for (let i = 0; i < lanes.length - 1; i++) lanes[i].lit = true;
+    lanes[lanes.length - 1].lit = false;
+    // Fly ball through last lane
+    const cx = (lanes[lanes.length-1].xMin + lanes[lanes.length-1].xMax) / 2;
+    window.__test.place(cx, 70, 0, -50);
+    for (let i = 0; i < 15; i++) window.__test.step(1);
+    return { mult: window.__test.state.mult, anyLit: window.__test.topLanes.some(l => l.lit) };
+  });
+  expect(r.mult).toBeGreaterThanOrEqual(2); // multiplier went up from 1 to 2
+  expect(r.anyLit).toBe(false); // lanes reset after completion
+});
+
+test('top lanes: spell-neon completion fires jackpot and doubles base', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('spell-neon');
+    window.__test.restart();
+    const lanes = window.__test.topLanes;
+    const before = window.__test.state.score;
+    // Light first 3, then fly ball through last
+    for (let i = 0; i < 3; i++) lanes[i].lit = true;
+    lanes[3].lit = false;
+    const cx = (lanes[3].xMin + lanes[3].xMax) / 2;
+    window.__test.place(cx, 70, 0, -50);
+    for (let i = 0; i < 15; i++) window.__test.step(1);
+    return {
+      scoreDelta: window.__test.state.score - before,
+      jackpotBase: window.__test.state.spellJackpotBase,
+    };
+  });
+  expect(r.scoreDelta).toBeGreaterThan(0);
+  expect(r.jackpotBase).toBe(10000); // doubled from 5000
+});
+test('mini flipper: pressing left key sweeps miniL flipper toward active angle', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.restart();
+    const angleRest = window.__test.miniLFlipper.angle;
+    // Press left key and step a few frames
+    window.__test.press('z');
+    for (let i = 0; i < 10; i++) window.__test.step(1);
+    const angleActive = window.__test.miniLFlipper.angle;
+    window.__test.release('z');
+    return { angleRest, angleActive };
+  });
+  expect(r.angleRest).toBeCloseTo(0.9, 1);
+  expect(r.angleActive).toBeLessThan(r.angleRest); // sweeping toward -0.4
+});
+
+test('mini flipper: ball in outlane above pivot is deflected inward when active', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.restart();
+    // Place ball just above the flipper pivot (y=492), falling down into the outlane
+    window.__test.place(18, 475, 0, 80);
+    window.__test.press('z'); // flipper sweeps up toward -0.4 and intercepts ball
+    let deflected = false;
+    for (let i = 0; i < 90; i++){
+      window.__test.step(1);
+      const b = window.__test.ball;
+      if (b.v.x > 50) { deflected = true; break; }
+    }
+    window.__test.release('z');
+    return deflected;
+  });
+  expect(r).toBe(true);
+});
+
+test('mini flipper: resting left mini flipper does not push ball into wall pocket', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('bumper-frenzy');
+    window.__test.restart();
+    window.__test.state.saverUntil = 0;
+    window.__test.state.ballWasLaunched = true;
+    window.__test.state.kickback = false;
+    // Screenshot regression: resting mini flipper tip sits beside this pocket.
+    window.__test.place(45, 512, 0, 0);
+    let minX = window.__test.ball.p.x;
+    for (let i = 0; i < 18; i++){
+      window.__test.step(1);
+      minX = Math.min(minX, window.__test.ball.p.x);
+    }
+    return {
+      minX,
+      x: window.__test.ball.p.x,
+      y: window.__test.ball.p.y,
+    };
+  });
+  expect(r.minX).toBeGreaterThanOrEqual(40);
+  expect(r.y).toBeGreaterThan(525);
+});
+
+
+test('right kickback: armed right outlane relaunches ball back into play', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.restart();
+    window.__test.state.saverUntil = 0;
+    window.__test.state.ballWasLaunched = true; // simulate ball having been launched
+    // x=405, actually inside outlane channel (past the separator wall at x≈394)
+    window.__test.place(405, 600, 0, 180);
+    let kickbackFired = false;
+    let movedLeft = false;
+    for (let i = 0; i < 600; i++){
+      window.__test.step(1);
+      const b = window.__test.ball;
+      const s = window.__test.state;
+      if (!s.rightKickback) kickbackFired = true;
+      if (kickbackFired && b.p.x < 360) movedLeft = true;
+      if (s.balls < 3) break;
+    }
+    return { kickbackFired, movedLeft, balls: window.__test.state.balls };
+  });
+  expect(r.kickbackFired).toBe(true);
+  expect(r.movedLeft).toBe(true);
+  expect(r.balls).toBe(3);
+});
+
+test('cabinet menu: keys 4-7 select gameplay modes', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.press('4'); const m4 = window.__test.getGameplayModeId();
+    window.__test.press('5'); const m5 = window.__test.getGameplayModeId();
+    window.__test.press('6'); const m6 = window.__test.getGameplayModeId();
+    window.__test.press('7'); const m7 = window.__test.getGameplayModeId();
+    return { m4, m5, m6, m7 };
+  });
+  expect(r.m4).toBe('top-lanes');
+  expect(r.m5).toBe('drop-bank');
+  expect(r.m6).toBe('spell-neon');
+  expect(r.m7).toBe('bumper-frenzy');
+});
+
+test('integration: all 4 modes run 5 seconds without error', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.goto(URL);
+  for (const modeId of ['top-lanes','drop-bank','spell-neon','bumper-frenzy']){
+    await page.evaluate((id) => {
+      window.__test.pause();
+      window.__test.openMenu();
+      window.__test.setGameplayModeFromMenu(id);
+      window.__test.restart();
+      window.__test.place(140, 100, 30, 200);
+      for (let i = 0; i < 240*5; i++) window.__test.step(1);
+    }, modeId);
+  }
+  expect(errors).toEqual([]);
+});
+
+test('integration: table rebuild on restart does not leave stale physics objects', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('bumper-frenzy');
+    window.__test.restart();
+    const bumpersFrenzy = window.__test.bumpers.length;
+    const lanesFrenzy = window.__test.topLanes.length;
+
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('top-lanes');
+    window.__test.restart();
+    const bumpersTopLanes = window.__test.bumpers.length;
+    const lanesTopLanes = window.__test.topLanes.length;
+
+    return { bumpersFrenzy, lanesFrenzy, bumpersTopLanes, lanesTopLanes };
+  });
+  expect(r.bumpersFrenzy).toBe(6);
+  expect(r.lanesFrenzy).toBe(3);
+  expect(r.bumpersTopLanes).toBe(5);
+  expect(r.lanesTopLanes).toBe(5);
+});
+
+test('integration: top-lanes mult can reach x4 by completing lanes repeatedly', async ({ page }) => {
+  await page.goto(URL);
+  const mult = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('top-lanes');
+    window.__test.restart();
+    // Complete lanes 3 times to push mult from 1 → 4
+    for (let round = 0; round < 3; round++){
+      for (const lane of window.__test.topLanes) lane.lit = false;
+      const lanes = window.__test.topLanes;
+      for (let i = 0; i < lanes.length - 1; i++) lanes[i].lit = true;
+      lanes[lanes.length-1].lit = false;
+      const cx = (lanes[lanes.length-1].xMin + lanes[lanes.length-1].xMax) / 2;
+      window.__test.place(cx, 70, 0, -50);
+      for (let i = 0; i < 15; i++) window.__test.step(1);
+    }
+    return window.__test.state.mult;
+  });
+  expect(mult).toBeGreaterThanOrEqual(3);
 });

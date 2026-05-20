@@ -11,11 +11,11 @@
 </style>
 </head>
 <body>
-<canvas id="c" width="420" height="720"></canvas>
+<canvas id="c" width="420" height="780"></canvas>
 <script type="module">
 // ============ 1. CONFIG ============
 const CONFIG = {
-  W: 420, H: 720, BALL_R: 11,
+  W: 420, H: 720, VIEW_H: 780, HUD_H: 60, TABLE_Y: 60, BALL_R: 11,
   GRAVITY: 900, DRAG_PER_SEC: 0.9995,
   FIXED_DT: 1/240, MAX_SUBSTEPS: 4,
 };
@@ -46,6 +46,116 @@ const CABINET_MENU_RULE_LINES = [
   'START WITH 3 BALLS',
   '500000 SCORE  EXTRA BALL',
 ];
+
+const DEFAULT_GAMEPLAY_MODE_ID = 'top-lanes';
+const GAMEPLAY_MODE_STORAGE_KEY = 'flipper.gameplayModeId';
+const RIGHT_KICKBACK_EJECT = { x: 352, y: 510, vx: -340, vy: -580 };
+
+const GAMEPLAY_MODES = {
+  'top-lanes': {
+    id: 'top-lanes', name: 'Top Lanes',
+    objective: 'Light all 5 lanes → MULT',
+    accentColor: null,
+    laneCount: 5, laneLabels: ['1','2','3','4','5'],
+    onLaneComplete: 'multiplier',
+    // Classic open field — no structural extras, pure score-the-lanes gameplay
+    bumpers: [
+      { c:{x:150,y:248}, r:22, gain:1.7, value:250 },
+      { c:{x:210,y:198}, r:22, gain:1.7, value:250 },
+      { c:{x:270,y:248}, r:22, gain:1.7, value:250 },
+      { c:{x:100,y:218}, r:19, gain:1.6, value:200 },
+      { c:{x:320,y:218}, r:19, gain:1.6, value:200 },
+    ],
+    drops: [
+      { c:{x:175,y:360}, w:24, h:8, value:200 },
+      { c:{x:210,y:360}, w:24, h:8, value:200 },
+      { c:{x:245,y:360}, w:24, h:8, value:200 },
+    ],
+    arcs: [],
+    guides: [],
+  },
+  'drop-bank': {
+    id: 'drop-bank', name: 'Drop Bank',
+    objective: 'Break the V-wall → BURST',
+    accentColor: '#ce93d8', // purple
+    laneCount: 3, laneLabels: ['A','B','C'],
+    onLaneComplete: 'points-burst',
+    // 3 wide bumpers + 4 drops in CHEVRON (V-shape) — ball funnelled from sides
+    bumpers: [
+      { c:{x:108,y:188}, r:20, gain:1.7, value:300 },
+      { c:{x:210,y:162}, r:23, gain:1.8, value:350 },
+      { c:{x:312,y:188}, r:20, gain:1.7, value:300 },
+    ],
+    drops: [
+      { c:{x:148,y:304}, w:36, h:14, value:400 },  // far-left arm of V
+      { c:{x:186,y:280}, w:36, h:14, value:400 },  // near-left
+      { c:{x:234,y:280}, w:36, h:14, value:400 },  // near-right
+      { c:{x:272,y:304}, w:36, h:14, value:400 },  // far-right arm of V
+    ],
+    arcs: [],
+    // Short funnel walls toward the V-tip — stops above sling zone to avoid side pockets
+    guides: [
+      { a:{x:92, y:415}, b:{x:118, y:338} },
+      { a:{x:328,y:415}, b:{x:302, y:338} },
+    ],
+  },
+  'spell-neon': {
+    id: 'spell-neon', name: 'Spell Neon',
+    objective: 'Spell N-E-O-N → JACKPOT',
+    accentColor: '#b2ff59', // lime/neon green
+    laneCount: 4, laneLabels: ['N','E','O','N'],
+    onLaneComplete: 'jackpot',
+    // 4 corner letter-bumpers surround a glowing PORTAL arc at centre
+    // Ball must navigate around the portal to reach the top lanes
+    bumpers: [
+      { c:{x:115,y:215}, r:20, gain:1.8, value:600 },  // N – top-left
+      { c:{x:305,y:215}, r:20, gain:1.8, value:600 },  // E – top-right
+      { c:{x:115,y:298}, r:20, gain:1.8, value:600 },  // O – bot-left
+      { c:{x:305,y:298}, r:20, gain:1.8, value:600 },  // N – bot-right
+    ],
+    drops: [
+      { c:{x:175,y:375}, w:22, h:8, value:200 },
+      { c:{x:210,y:375}, w:22, h:8, value:200 },
+      { c:{x:245,y:375}, w:22, h:8, value:200 },
+    ],
+    // Portal arc — full circle obstacle ball deflects off
+    arcs: [
+      { c:{x:210,y:252}, R:38, a0:0, a1:Math.PI*2, outward:true, restitution:0.85 },
+    ],
+    // Short guide rails push ball up toward the letter bumpers without crowding outlanes
+    guides: [
+      { a:{x:92, y:420}, b:{x:78, y:335} },
+      { a:{x:328,y:420}, b:{x:342, y:335} },
+    ],
+  },
+  'bumper-frenzy': {
+    id: 'bumper-frenzy', name: 'Bumper Frenzy',
+    objective: 'Ring the Volcano → SUPER',
+    accentColor: '#ff6d00', // deep orange
+    laneCount: 3, laneLabels: ['X','X','X'],
+    onLaneComplete: 'super-all',
+    // 6 bumpers in hexagonal RING — a small volcanic arc core at the centre
+    // Ball ricochets around the ring in chain-reaction chaos
+    bumpers: [
+      { c:{x:210,y:168}, r:22, gain:2.2, value:350 },  // top
+      { c:{x:152,y:202}, r:22, gain:2.2, value:350 },  // upper-left
+      { c:{x:268,y:202}, r:22, gain:2.2, value:350 },  // upper-right
+      { c:{x:152,y:260}, r:22, gain:2.2, value:350 },  // lower-left
+      { c:{x:268,y:260}, r:22, gain:2.2, value:350 },  // lower-right
+      { c:{x:210,y:294}, r:22, gain:2.2, value:350 },  // bottom
+    ],
+    drops: [],
+    // Volcanic core arc — ball deflects off the outside, into the ring
+    arcs: [
+      { c:{x:210,y:230}, R:22, a0:0, a1:Math.PI*2, outward:true, restitution:0.95 },
+    ],
+    // Guide rails funnel ball into the ring from both sides
+    guides: [
+      { a:{x:92, y:418}, b:{x:118, y:315} },
+      { a:{x:328,y:418}, b:{x:302, y:315} },
+    ],
+  },
+};
 
 const THEME_PACKS = {
   'sunburst-classic': {
@@ -128,6 +238,7 @@ const THEME_PACKS = {
 const settings = {
   themeId: DEFAULT_THEME_ID,
   soundEnabled: true,
+  gameplayModeId: DEFAULT_GAMEPLAY_MODE_ID,
 };
 
 const menu = {
@@ -142,21 +253,54 @@ function getActiveTheme(){
   return THEME_PACKS[settings.themeId] || THEME_PACKS[DEFAULT_THEME_ID];
 }
 
+function isGameplayModeIdValid(id){
+  return Object.prototype.hasOwnProperty.call(GAMEPLAY_MODES, id);
+}
+
+function getActiveMode(){
+  return GAMEPLAY_MODES[settings.gameplayModeId] || GAMEPLAY_MODES[DEFAULT_GAMEPLAY_MODE_ID];
+}
+
+function setGameplayModeId(id){
+  if (!isGameplayModeIdValid(id)) return false;
+  settings.gameplayModeId = id;
+  saveSettings();
+  return true;
+}
+
+function applyGameplayModeFromMenu(id){
+  if (!canApplyMenuSetting()) return false;
+  const changed = settings.gameplayModeId !== id;
+  const ok = setGameplayModeId(id);
+  if (ok && changed){
+    // Table layout depends on the mode — rebuild immediately so the new layout
+    // is visible as soon as the menu closes, without waiting for game over.
+    clearTable();
+    buildTable();
+    serveBall();
+  }
+  return ok;
+}
+
 function saveSettings(){
   localStorage.setItem(THEME_STORAGE_KEY, settings.themeId);
   localStorage.setItem(SOUND_STORAGE_KEY, String(settings.soundEnabled));
+  localStorage.setItem(GAMEPLAY_MODE_STORAGE_KEY, settings.gameplayModeId);
 }
 
 function loadSettings(){
   const rawTheme = localStorage.getItem(THEME_STORAGE_KEY);
   const rawSound = localStorage.getItem(SOUND_STORAGE_KEY);
+  const rawMode  = localStorage.getItem(GAMEPLAY_MODE_STORAGE_KEY);
 
   settings.themeId = isThemeIdValid(rawTheme) ? rawTheme : DEFAULT_THEME_ID;
   const soundValid = rawSound === 'true' || rawSound === 'false';
   settings.soundEnabled = soundValid ? rawSound === 'true' : true;
+  settings.gameplayModeId = isGameplayModeIdValid(rawMode) ? rawMode : DEFAULT_GAMEPLAY_MODE_ID;
 
   if (!isThemeIdValid(rawTheme)) localStorage.setItem(THEME_STORAGE_KEY, settings.themeId);
   if (!soundValid) localStorage.setItem(SOUND_STORAGE_KEY, String(settings.soundEnabled));
+  if (!isGameplayModeIdValid(rawMode)) localStorage.setItem(GAMEPLAY_MODE_STORAGE_KEY, settings.gameplayModeId);
 }
 
 function setThemeId(nextId){
@@ -181,7 +325,7 @@ function closeMenuAndResume(){
   paused = false;
 }
 
-function canApplyThemeFromMenu(){
+function canApplyMenuSetting(){
   return menu.open && paused;
 }
 
@@ -198,12 +342,12 @@ function getCabinetMenuRuleLines(){
 }
 
 function applyThemeFromMenu(themeId){
-  if (!canApplyThemeFromMenu()) return false;
+  if (!canApplyMenuSetting()) return false;
   return setThemeId(themeId);
 }
 
 function applySoundFromMenu(enabled){
-  if (!canApplyThemeFromMenu()) return false;
+  if (!canApplyMenuSetting()) return false;
   setSoundEnabled(enabled);
   if (enabled) playThemeSound('ui_toggle');
   return true;
@@ -337,10 +481,25 @@ function addSling(a, b, gain=1.5, value=50){
 const dropList = []; // { c (center), w, h, down, downUntil, value }
 function addDrop(c, w=24, h=8, value=200){ dropList.push({ c, w, h, down:false, downUntil:0, value }); }
 
+const topLaneList = []; // { xMin, xMax, label, lit }
+let topLanesZoneCooldown = false; // prevents re-detection after completion while ball still in zone
+
+function clearTable(){
+  segments.length = 0;
+  arcRegistry.length = 0;
+  slingList.length = 0;
+  bumperList.length = 0;
+  dropList.length = 0;
+  topLaneList.length = 0;
+  gateSeg = null;
+}
+
 function serveBall(){
   ball.p = { x: 400, y: 680 };
   ball.v = { x: 0, y: 0 };
   state.phase = 'ready';
+  state.spellJackpotBase = 5000;
+  state.ballWasLaunched = false;
   state.saverUntil = performance.now()/1000 + 5;
 }
 
@@ -360,9 +519,19 @@ function restartGame(){
   state.bumperChainCount = 0;
   state.bumperChainUntil = 0;
   state.extraBallAwarded = false;
+  state.rightKickback = true;
+  state.rightKickbackFlash = 0;
+  state.spellJackpotBase = 5000;
+  state.ballWasLaunched = false;
+  topLanesZoneCooldown = false;
   floatTexts.length = 0;
-  for (const bp of bumperList){ bp.hits = 0; bp.flash = 0; }
-  for (const dp of dropList){ dp.down = false; dp.downUntil = 0; }
+  clearTable();
+  buildTable();
+  for (const f of [flippers.L, flippers.R, flippers.miniL].filter(Boolean)){
+    f.angle = f.angleRest;
+    f.angVel = 0;
+    f.pressed = false;
+  }
   serveBall();
 }
 
@@ -416,6 +585,46 @@ function applyScore(points){
   maybeAwardExtraBall();
 }
 
+function handleTopLanesComplete(){
+  const mode = getActiveMode();
+  const nowSec = performance.now()/1000;
+  if (mode.onLaneComplete === 'multiplier'){
+    if (state.mult < 4){
+      state.mult += 1;
+      spawnFloat('LANES! MULT x' + state.mult, CONFIG.W/2, 200, '#fc4');
+    } else {
+      applyScore(5000 * state.mult);
+      spawnFloat('MAX MULT! +' + (5000 * state.mult), CONFIG.W/2, 200, '#fc4');
+    }
+    spawnParticles(CONFIG.W/2, 80, 20, '#fc4');
+    dispatchThemeEvent('jackpot', { x: CONFIG.W/2, y: 80 });
+    shake = Math.max(shake, 12);
+  } else if (mode.onLaneComplete === 'points-burst'){
+    const pts = 1000 * state.mult;
+    applyScore(pts);
+    spawnFloat('LANE BONUS +' + pts, CONFIG.W/2, 200, '#5cf');
+    spawnParticles(CONFIG.W/2, 80, 20, '#5cf');
+    dispatchThemeEvent('drop_clear', { x: CONFIG.W/2, y: 80 });
+    shake = Math.max(shake, 8);
+  } else if (mode.onLaneComplete === 'jackpot'){
+    const pts = state.spellJackpotBase * state.mult;
+    applyScore(pts);
+    spawnFloat('N-E-O-N! +' + pts, CONFIG.W/2, 200, '#0ff');
+    spawnParticles(CONFIG.W/2, 80, 30, '#0ff');
+    dispatchThemeEvent('jackpot', { x: CONFIG.W/2, y: 80 });
+    state.spellJackpotBase = Math.min(state.spellJackpotBase * 2, 80000);
+    shake = Math.max(shake, 16);
+  } else if (mode.onLaneComplete === 'super-all'){
+    state.superBumpersUntil = nowSec + 10;
+    state.bumperChainCount = 0;
+    spawnFloat('FRENZY! ALL SUPER!', CONFIG.W/2, 200, '#f3a');
+    spawnParticles(CONFIG.W/2, 80, 40, '#f3a');
+    dispatchThemeEvent('jackpot', { x: CONFIG.W/2, y: 80 });
+    shake = Math.max(shake, 20);
+  }
+  for (const lane of topLaneList) lane.lit = false;
+}
+
 function bumperSuperActive(nowSec = performance.now()/1000){
   return state.superBumpersUntil > nowSec;
 }
@@ -444,6 +653,7 @@ function registerBumperHit(bp, nowSec){
 function physicsStep(dt){
   flippers.L.pressed = input.L;
   flippers.R.pressed = input.R;
+  if (flippers.miniL) flippers.miniL.pressed = input.L;
   const nowSec = performance.now()/1000;
   for (const dp of dropList){ if (dp.down && dp.downUntil && nowSec >= dp.downUntil){ dp.down = false; dp.downUntil = 0; } }
   if (state.comboUntil && nowSec > state.comboUntil){
@@ -471,7 +681,8 @@ function physicsStep(dt){
       const hit = sweepCircleArc(ball.p, d, ball.r, a.c, a.R, a.a0, a.a1, a.outward);
       if (hit && (!best || hit.toi < best.toi)){ best = hit; best.surface = a; }
     }
-    for (const f of [flippers.L, flippers.R]){
+    for (const f of [flippers.L, flippers.R, flippers.miniL].filter(Boolean)){
+      if (f === flippers.miniL && !f.pressed && Math.abs(f.angVel) < 0.01) continue;
       const hit = flipperCollide(f, ball.p, d, ball.r);
       if (hit && (!best || hit.toi < best.toi)) best = { ...hit, surface: { kind:'flipper', restitution: 0.2 } };
     }
@@ -568,6 +779,7 @@ function physicsStep(dt){
         applyScore(clearBonus);
         spawnFloat('DROP BONUS +' + clearBonus, CONFIG.W/2, 340, '#fc4');
         state.kickback = true; // rearm kickback on every bank clear
+        state.rightKickback = true;
         for (const d of dropList){ d.down = false; d.downUntil = 0; }
       }
       remaining *= (1 - best.toi);
@@ -605,7 +817,7 @@ function physicsStep(dt){
     remaining *= (1 - best.toi);
   }
   // Kickback: fires the ball back out of the left outlane when armed.
-  if (state.kickback && ball.p.x > 2 && ball.p.x < 30 && ball.p.y > 550 && ball.p.y < 700){
+  if (state.kickback && ball.p.x > 2 && ball.p.x < 64 && ball.p.y > 550 && ball.p.y < 700){
     ball.p.x = KICKBACK_EJECT.x;
     ball.p.y = KICKBACK_EJECT.y;
     ball.v.x = KICKBACK_EJECT.vx;
@@ -616,7 +828,40 @@ function physicsStep(dt){
     spawnFloat('KICKBACK!', 92, 540, '#0ff');
     shake = 12;
   }
+  // Right kickback (symmetric to left)
+  if (state.rightKickback && state.ballWasLaunched && ball.p.x > 393 && ball.p.x < 418 && ball.p.y > 550 && ball.p.y < 700 && ball.v.y > 0){
+    ball.p.x = RIGHT_KICKBACK_EJECT.x;
+    ball.p.y = RIGHT_KICKBACK_EJECT.y;
+    ball.v.x = RIGHT_KICKBACK_EJECT.vx;
+    ball.v.y = RIGHT_KICKBACK_EJECT.vy;
+    state.rightKickback = false;
+    state.rightKickbackFlash = 0.8;
+    spawnParticles(RIGHT_KICKBACK_EJECT.x, 600, 24, '#0ff');
+    spawnFloat('KICKBACK!', CONFIG.W - 88, 540, '#0ff');
+    shake = 12;
+  }
   handleDrain();
+  // Top lane detection — zone extends to y<80 so balls placed/launched near y=70 register correctly.
+  // Triggers on both upward and downward travel (standard pinball behaviour).
+  if (ball.p.y > 24 && ball.p.y < 80){
+    if (!topLanesZoneCooldown){
+      for (const lane of topLaneList){
+        if (!lane.lit && ball.p.x >= lane.xMin && ball.p.x <= lane.xMax){
+          lane.lit = true;
+          applyScore(100 * state.mult);
+          registerScoreEvent();
+          spawnFloat(lane.label ? lane.label + '!' : '+100', ball.p.x, 68, '#5cf');
+          if (topLaneList.every(l => l.lit)){
+            handleTopLanesComplete();
+            topLanesZoneCooldown = true;
+          }
+          break;
+        }
+      }
+    }
+  } else {
+    topLanesZoneCooldown = false;
+  }
 }
 
 // ============ 4. TABLE ============
@@ -627,55 +872,60 @@ const DRAIN_LEFT = 175, DRAIN_RIGHT = 245;
 const KICKBACK_EJECT = { x: 68, y: 510, vx: 340, vy: -580 };
 
 function buildTable(){
-  // Outer perimeter — top (only over playfield, not over shooter lane), left, right
+  const mode = getActiveMode();
+
+  // ── Fixed geometry shared by all modes ──
   addSegment({x:0,   y:24},  {x:SHOOTER_X, y:24});
   addSegment({x:0,   y:24},  {x:0,        y:CONFIG.H});
   addSegment({x:CONFIG.W, y:24}, {x:CONFIG.W, y:CONFIG.H});
-  // Outlane floors slope toward the drain so a ball that comes to rest at the
-  // bottom rolls into it instead of sitting on a flat lip. The shooter-lane
-  // floor stays flat so a freshly served ball doesn't drift away from rest.
   addSegment({x:0,           y:CONFIG.H-20}, {x:DRAIN_LEFT,  y:CONFIG.H});
   addSegment({x:DRAIN_RIGHT,  y:CONFIG.H},   {x:SHOOTER_X,   y:CONFIG.H-20});
   addSegment({x:SHOOTER_X,    y:CONFIG.H-20},{x:CONFIG.W,    y:CONFIG.H-20});
-  // Shooter lane divider runs from the deflector base down to the inlane bend.
   addSegment({x:SHOOTER_X, y:120}, {x:SHOOTER_X, y:CONFIG.H-40});
-  // Launch deflector: steep diagonal at the top of the shooter lane. A fast launched
-  // ball reflects up-and-left and arcs across the top of the playfield before falling
-  // down on the left side — classic launch-lane "around the top" trajectory.
   addSegment({x:SHOOTER_X, y:24}, {x:CONFIG.W, y:120}, { restitution: 0.92 });
 
-  // Outlane separators — sealed at the top by horizontal connectors so no ball
-  // can slip between the separator and the slingshot.
   addSegment({x:32,  y:490}, {x:26,  y:668});
   addSegment({x:388, y:490}, {x:394, y:668});
-  addSegment({x:55,  y:490}, {x:32,  y:490}); // left top connector
-  addSegment({x:365, y:490}, {x:388, y:490}); // right top connector
-  // Inlane guides: channel the ball from slingshot bottom toward each flipper.
+  addSegment({x:55,  y:490}, {x:38,  y:490});  // horizontal cap (ball-test zone stays flat)
+  addSegment({x:38,  y:490}, {x:32,  y:483});  // tiny diagonal to break the 90° pocket corner
+  addSegment({x:365, y:490}, {x:388, y:490});
+  // Anti-pocket deflector: closes the narrow corridor between left sling and left inner wall
+  addSegment({x:45, y:512}, {x:62, y:544});
+  // Anti-pocket deflector: closes the narrow corridor between right sling and right inner wall
+  addSegment({x:375, y:512}, {x:358, y:544});
   addSegment({x:115, y:600}, {x:120, y:618});
   addSegment({x:305, y:600}, {x:300, y:618});
-  // Mid-table guide rails — deflect balls up toward the bumper cluster.
   addSegment({x:75,  y:440}, {x:130, y:468});
   addSegment({x:345, y:440}, {x:290, y:468});
-  // Five bumpers: three-high plus two flanking for a tight cluster.
-  addBumper({x:140, y:250}, 22, 1.7, 250);
-  addBumper({x:210, y:200}, 22, 1.7, 250);
-  addBumper({x:280, y:250}, 22, 1.7, 250);
-  addBumper({x:100, y:220}, 20, 1.7, 250); // flanking left
-  addBumper({x:320, y:220}, 20, 1.7, 250); // flanking right
 
-  // Slingshots: extended upward for much wider coverage and stronger kick.
   addSling({x:55,  y:490}, {x:115, y:600}, 1.65, 80);
   addSling({x:365, y:490}, {x:305, y:600}, 1.65, 80);
 
-  addDrop({x:170, y:350}, 24, 8, 200);
-  addDrop({x:210, y:350}, 24, 8, 200);
-  addDrop({x:250, y:350}, 24, 8, 200);
+  // ── Mode-specific obstacles ──
+  for (const bp of mode.bumpers) addBumper(bp.c, bp.r, bp.gain, bp.value);
+  for (const dp of mode.drops)   addDrop(dp.c, dp.w, dp.h, dp.value);
+  for (const ap of (mode.arcs||[])) addArc(ap.c, ap.R, ap.a0, ap.a1, { outward: ap.outward, restitution: ap.restitution });
+
+  // ── Mode-specific guide rails (deflect ball differently per mode) ──
+  for (const g of mode.guides)   addSegment(g.a, g.b, { kind: 'guide', restitution: 0.8 });
+
+  // ── Top lanes ──
+  const xStart = 10, xEnd = 355;
+  const laneWidth = (xEnd - xStart) / mode.laneCount;
+  for (let i = 0; i < mode.laneCount; i++){
+    topLaneList.push({
+      xMin: xStart + i * laneWidth,
+      xMax: xStart + (i + 1) * laneWidth,
+      label: mode.laneLabels ? mode.laneLabels[i] : null,
+      lit: false,
+    });
+  }
 }
 
 buildTable();
 
 // ============ 5. FLIPPERS ============
-const flippers = { L: null, R: null };
+const flippers = { L: null, R: null, miniL: null };
 function makeFlipper(pivot, side){
   const restAngle = side==='L' ? 0.45 : Math.PI - 0.45;
   const upAngle   = side==='L' ? -0.45 : Math.PI + 0.45;
@@ -690,12 +940,27 @@ function makeFlipper(pivot, side){
 flippers.L = makeFlipper({x:135, y:620}, 'L');
 flippers.R = makeFlipper({x:285, y:620}, 'R');
 
+function makeMiniFlipperL(){
+  // Pivot on left wall at top of left outlane (y=492, x=30)
+  // Rest: angled right-downward (0.9 rad ≈ 52°, tip points right and slightly down)
+  // Up: angled right-upward (−0.4 rad ≈ −23°, tip points right and up → deflects ball inward)
+  return {
+    pivot: { x: 30, y: 492 },
+    side: 'L',
+    length: 38, tipR: 5, baseR: 8,
+    angle: 0.9, angleRest: 0.9, angleUp: -0.4,
+    angVel: 0, state: 'rest',
+    pressed: false,
+  };
+}
+flippers.miniL = makeMiniFlipperL();
+
 function flipperTip(f){
   return { x: f.pivot.x + Math.cos(f.angle)*f.length, y: f.pivot.y + Math.sin(f.angle)*f.length };
 }
 
 function flipperStep(dt){
-  for (const f of [flippers.L, flippers.R]){
+  for (const f of [flippers.L, flippers.R, flippers.miniL].filter(Boolean)){
     const target = f.pressed ? f.angleUp : f.angleRest;
     const delta = target - f.angle;
     const maxSpeed = f.pressed ? 18 : 10;  // rad/s
@@ -742,6 +1007,7 @@ function plungerCharge(dt){ plunger.charge = clamp(plunger.charge + plunger.char
 function plungerRelease(){
   if (ball.p.x > SHOOTER_X && ball.p.y > 600){
     ball.v.y = -plunger.charge * plunger.maxImpulse;
+    state.ballWasLaunched = true;
     state.saverUntil = performance.now()/1000 + 5;
   }
   plunger.charge = 0;
@@ -752,7 +1018,7 @@ function plungerStep(dt){
 }
 
 // ============ 7. SCORING ============
-const state = { phase:'ready', score:0, hi:0, balls:3, mult:1, saverUntil:0, drops:[false,false,false], dropCycles:0, comboCount:0, comboUntil:0, kickback:true, kickbackFlash:0, bumperHits:0, superBumpersUntil:0, bumperChainCount:0, bumperChainUntil:0, extraBallAwarded:false };
+const state = { phase:'ready', score:0, hi:0, balls:3, mult:1, saverUntil:0, drops:[false,false,false], dropCycles:0, comboCount:0, comboUntil:0, kickback:true, kickbackFlash:0, bumperHits:0, superBumpersUntil:0, bumperChainCount:0, bumperChainUntil:0, extraBallAwarded:false, rightKickback:true, rightKickbackFlash:0, spellJackpotBase:5000, ballWasLaunched:false };
 
 loadSettings();
 
@@ -776,6 +1042,10 @@ window.addEventListener('keydown', e=>{
     if (e.key === '1') applyThemeFromMenu('sunburst-classic');
     if (e.key === '2') applyThemeFromMenu('cosmic-wedge');
     if (e.key === '3') applyThemeFromMenu('volcano-pop');
+    if (e.key === '4') applyGameplayModeFromMenu('top-lanes');
+    if (e.key === '5') applyGameplayModeFromMenu('drop-bank');
+    if (e.key === '6') applyGameplayModeFromMenu('spell-neon');
+    if (e.key === '7') applyGameplayModeFromMenu('bumper-frenzy');
     if (e.key === 's' || e.key === 'S') applySoundFromMenu(!settings.soundEnabled);
     if (e.key === 'Enter') closeMenuAndResume();
     return;
@@ -899,12 +1169,67 @@ function spawnParticles(x, y, n, color){
 // ============ 9. RENDER ============
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
+
+function drawTopLanes(modeAccent){
+  const lanes = topLaneList;
+  if (!lanes.length) return;
+  const theme = getActiveTheme();
+  const palette = theme.palette;
+  const litColor = modeAccent || palette.bumperGlow;
+  const totalW = 345; // xEnd - xStart = 355 - 10
+  const laneW = totalW / lanes.length;
+  const xStart = 10;
+  const yTop = 24;
+  const yBot = 50;
+
+  ctx.save();
+  ctx.lineWidth = 1;
+
+  for (let i = 0; i < lanes.length; i++){
+    const lane = lanes[i];
+    const lx = xStart + i * laneW;
+    const cx = lx + laneW / 2;
+
+    // Lane divider (left edge of each lane)
+    ctx.strokeStyle = lane.lit ? litColor : palette.lane;
+    ctx.shadowColor = lane.lit ? litColor : 'transparent';
+    ctx.shadowBlur = lane.lit ? 6 : 0;
+    ctx.beginPath();
+    ctx.moveTo(lx, yTop);
+    ctx.lineTo(lx, yBot);
+    ctx.stroke();
+
+    // Lane label — show label text if defined, else lane number
+    const labelText = lane.label != null ? lane.label : String(i + 1);
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = lane.lit ? litColor : palette.textPrimary;
+    ctx.shadowColor = lane.lit ? litColor : 'transparent';
+    ctx.shadowBlur = lane.lit ? 4 : 0;
+    ctx.fillText(labelText, cx, yBot - 4);
+  }
+
+  // Right edge of last lane — matches last lane's lit state
+  const lastX = xStart + lanes.length * laneW;
+  const lastLane = lanes[lanes.length - 1];
+  ctx.strokeStyle = lastLane.lit ? litColor : palette.lane;
+  ctx.shadowColor = lastLane.lit ? litColor : 'transparent';
+  ctx.shadowBlur = lastLane.lit ? 6 : 0;
+  ctx.beginPath();
+  ctx.moveTo(lastX, yTop);
+  ctx.lineTo(lastX, yBot);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
 function render(){
   const dtRender = 1/60;
   const nowSec = performance.now()/1000;
   const superBumpers = bumperSuperActive(nowSec);
   const theme = getActiveTheme();
   const palette = theme.palette;
+  const modeAccent = getActiveMode().accentColor || palette.bumperGlow;
   updateLightEffects(dtRender);
   trail.push({ x: ball.p.x, y: ball.p.y });
   if (trail.length > 12) trail.shift();
@@ -919,8 +1244,9 @@ function render(){
   if (shake > 0) shake = Math.max(0, shake - dtRender * 30);
 
   ctx.fillStyle = palette.bg;
-  ctx.fillRect(0,0,CONFIG.W,CONFIG.H);
+  ctx.fillRect(0,0,CONFIG.W,CONFIG.VIEW_H);
   ctx.save();
+  ctx.translate(0, CONFIG.TABLE_Y);
   if (shake > 0){
     ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake);
   }
@@ -929,6 +1255,24 @@ function render(){
   for (const s of segments){
     if (s.enabled === false) continue;
     if (s.kind === 'sling') continue; // rendered separately below
+    if (s.kind === 'guide'){
+      // Mode guide rails — animated flowing dash to signal active mode
+      const dashOffset = -(performance.now() / 12.5) % 26;  // flows "up" the rail
+      ctx.strokeStyle = modeAccent;
+      ctx.shadowColor = modeAccent;
+      ctx.shadowBlur = 8 + 4 * Math.sin(nowSec * 3);
+      ctx.lineWidth = 3;
+      ctx.setLineDash([8, 5]);
+      ctx.lineDashOffset = dashOffset;
+      ctx.beginPath();
+      ctx.moveTo(s.a.x, s.a.y);
+      ctx.lineTo(s.b.x, s.b.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.lineDashOffset = 0;
+      ctx.shadowBlur = 0;
+      continue;
+    }
     ctx.strokeStyle = palette.lane;
     ctx.shadowColor = palette.insertOn;
     ctx.shadowBlur = 8;
@@ -939,11 +1283,12 @@ function render(){
     ctx.stroke();
   }
   ctx.shadowBlur = 0;
-  // Arcs (outlane guides)
+  // Arcs — drawn with mode accent + breathing glow
   for (const ar of arcRegistry){
-    ctx.strokeStyle = palette.lane;
-    ctx.shadowColor = palette.insertOn;
-    ctx.shadowBlur = 8;
+    const pulse = 6 + 4 * Math.sin(nowSec * 3 + ar.c.x * 0.02);
+    ctx.strokeStyle = modeAccent;
+    ctx.shadowColor = modeAccent;
+    ctx.shadowBlur = pulse;
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(ar.c.x, ar.c.y, ar.R, ar.a0, ar.a1);
@@ -956,11 +1301,11 @@ function render(){
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
   ctx.fillText('▼ DRAIN ▼', (DRAIN_LEFT + DRAIN_RIGHT) / 2, CONFIG.H - 2);
-  for (const f of [flippers.L, flippers.R]){
+  for (const f of [flippers.L, flippers.R, flippers.miniL].filter(Boolean)){
     const tip = flipperTip(f);
     ctx.strokeStyle = '#fd5';
     ctx.lineCap = 'round';
-    ctx.lineWidth = 14;
+    ctx.lineWidth = f === flippers.miniL ? 8 : 14;
     ctx.beginPath(); ctx.moveTo(f.pivot.x,f.pivot.y); ctx.lineTo(tip.x,tip.y); ctx.stroke();
   }
   for (const bp of bumperList){
@@ -987,10 +1332,14 @@ function render(){
       ctx.stroke();
       ctx.restore();
     }
-    ctx.fillStyle = bp.flash > 0 ? '#fff' : (superBumpers ? palette.insertOn : palette.bumperGlow);
-    ctx.shadowColor = superBumpers ? palette.insertOn : palette.bumperGlow;
+    ctx.fillStyle = bp.flash > 0 ? '#fff' : (superBumpers ? palette.insertOn : modeAccent);
+    ctx.shadowColor = superBumpers ? palette.insertOn : modeAccent;
     ctx.shadowBlur = bp.flash > 0 ? 24 : (superBumpers ? 20 : 12);
-    ctx.beginPath(); ctx.arc(bp.c.x, bp.c.y, bp.r, 0, 2*Math.PI); ctx.fill();
+    // Bumper-frenzy: cosmetic size pulse — draw radius only, never mutate bp.r
+    const drawR = (getActiveMode().id === 'bumper-frenzy' && !bp.flash)
+      ? bp.r * (1 + 0.07 * Math.sin(nowSec * 5 + bp.c.x * 0.03))
+      : bp.r;
+    ctx.beginPath(); ctx.arc(bp.c.x, bp.c.y, drawR, 0, 2*Math.PI); ctx.fill();
     ctx.shadowBlur = 0;
     // Show the per-bumper hit counter so the player sees these have a purpose.
     ctx.fillStyle = bp.flash > 0 ? '#06283c' : '#06283c';
@@ -1000,6 +1349,7 @@ function render(){
     ctx.fillText(String(bp.hits), bp.c.x, bp.c.y + 1);
     bp.flash = Math.max(0, bp.flash - 1/60);
   }
+   drawTopLanes(modeAccent);
   for (const sl of slingList){
     ctx.strokeStyle = sl.flash > 0 ? '#fff' : palette.slingGlow;
     ctx.lineWidth = 6; ctx.lineCap = 'round';
@@ -1008,8 +1358,10 @@ function render(){
   }
   for (const dp of dropList){
     if (dp.down) continue;
-    ctx.fillStyle = palette.insertOn;
+    ctx.fillStyle = modeAccent;
+    ctx.shadowColor = modeAccent; ctx.shadowBlur = 4;
     ctx.fillRect(dp.c.x - dp.w/2, dp.c.y - dp.h/2, dp.w, dp.h);
+    ctx.shadowBlur = 0;
   }
   for (let i = 0; i < trail.length; i++){
     const t = trail[i];
@@ -1052,47 +1404,60 @@ function render(){
   ctx.textAlign = 'start';
   ctx.restore();
 
-  // HUD panels keep text readable against rails/walls and avoid top-right crowding.
+  // HUD panels live above the translated board so they never cover gameplay.
   ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-  ctx.fillRect(6, 6, 248, 78);
-  ctx.fillRect(300, 6, 114, 66);
+  ctx.fillRect(6, 4, 252, 54);
+  ctx.fillRect(292, 4, 122, 54);
 
   ctx.fillStyle = palette.textAccent;
   ctx.font = "10px 'Press Start 2P', monospace";
   ctx.fillText('NEON PINBALL', 8, 16);
   ctx.fillStyle = palette.textPrimary;
-  ctx.fillText('SCORE ' + state.score.toString().padStart(7,'0'), 8, 34);
-  ctx.fillText('BALLS ' + state.balls, 8, 48);
+  ctx.fillText('SCORE ' + state.score.toString().padStart(7,'0'), 8, 32);
+  ctx.fillText('BALLS ' + state.balls, 8, 46);
   if (state.dropCycles > 0){
     ctx.fillStyle = palette.insertOn;
-    ctx.fillText('BNK x' + state.dropCycles, 8, 62);
+    ctx.fillText('BNK x' + state.dropCycles, 150, 46);
   }
   const hudRightX = 364;
   ctx.textAlign = 'right';
   ctx.fillStyle = state.mult > 1 ? palette.insertOn : '#888';
-  ctx.fillText('MULT x' + state.mult, hudRightX, 34);
+  ctx.fillText('MULT x' + state.mult, hudRightX, 16);
   if (state.saverUntil > nowSec){
     ctx.fillStyle = '#5f5';
-    ctx.fillText('SAVER', hudRightX, 48);
+    ctx.fillText('SAVER', hudRightX, 30);
   }
   if (state.kickback){
     ctx.fillStyle = palette.bumperGlow;
     ctx.shadowColor = palette.bumperGlow; ctx.shadowBlur = 6;
-    ctx.fillText('KBCK', hudRightX, 62);
+    ctx.fillText('KBCK', hudRightX, 44);
     ctx.shadowBlur = 0;
   } else if (state.kickbackFlash > 0){
     ctx.globalAlpha = state.kickbackFlash / 0.8;
     ctx.fillStyle = palette.bumperGlow;
-    ctx.fillText('KBCK', hudRightX, 62);
+    ctx.fillText('KBCK', hudRightX, 44);
     ctx.globalAlpha = 1;
     state.kickbackFlash = Math.max(0, state.kickbackFlash - 1/60);
+  }
+  // Right kickback indicator
+  if (state.rightKickback){
+    ctx.fillStyle = palette.bumperGlow;
+    ctx.shadowColor = palette.bumperGlow; ctx.shadowBlur = 6;
+    ctx.fillText('R-KB', hudRightX, 56);
+    ctx.shadowBlur = 0;
+  } else if (state.rightKickbackFlash > 0){
+    ctx.globalAlpha = state.rightKickbackFlash / 0.8;
+    ctx.fillStyle = palette.bumperGlow;
+    ctx.fillText('R-KB', hudRightX, 56);
+    ctx.globalAlpha = 1;
+    state.rightKickbackFlash = Math.max(0, state.rightKickbackFlash - 1/60);
   }
   if (superBumpers){
     ctx.fillStyle = palette.bumperGlow;
     ctx.textAlign = 'center';
     ctx.shadowColor = palette.bumperGlow;
     ctx.shadowBlur = 8;
-    ctx.fillText('SUPER BUMPERS', CONFIG.W/2, 64);
+    ctx.fillText('SUPER BUMPERS', CONFIG.W/2, 56);
     ctx.shadowBlur = 0;
     ctx.textAlign = 'start';
   }
@@ -1110,9 +1475,12 @@ function render(){
   }
 
   ctx.fillStyle = palette.textAccent;
-  ctx.font = "8px 'Press Start 2P', monospace";
+  ctx.font = "7px 'Press Start 2P', monospace";
   ctx.textAlign = 'start';
-  ctx.fillText(theme.name.toUpperCase(), 8, 76);
+  const activeMode = getActiveMode();
+  ctx.fillText(theme.name.toUpperCase(), 8, 58);
+  ctx.fillStyle = activeMode.accentColor || palette.textAccent;
+  ctx.fillText(activeMode.name.toUpperCase(), 150, 58);
 
   const cabinetHint = getCabinetMenuIndicatorText();
   const hintY = CONFIG.H - 24;
@@ -1136,36 +1504,55 @@ function renderMenuOverlay(){
   const controlLines = getCabinetMenuControlLines();
   const ruleLines = getCabinetMenuRuleLines();
   ctx.fillStyle = 'rgba(0,0,0,0.72)';
-  ctx.fillRect(20, 104, CONFIG.W - 40, 400);
+  ctx.fillRect(20, 80, CONFIG.W - 40, 480);
   ctx.strokeStyle = p.textAccent;
   ctx.lineWidth = 2;
-  ctx.strokeRect(20, 104, CONFIG.W - 40, 400);
+  ctx.strokeRect(20, 80, CONFIG.W - 40, 480);
   ctx.fillStyle = p.textPrimary;
   ctx.font = "10px 'Press Start 2P', monospace";
   ctx.textAlign = 'center';
-  ctx.fillText('CABINET MENU', CONFIG.W/2, 140);
+  ctx.fillText('CABINET MENU', CONFIG.W/2, 114);
   ctx.textAlign = 'left';
-  ctx.fillText('1 SUNBURST CLASSIC', 50, 176);
-  ctx.fillText('2 COSMIC WEDGE', 50, 202);
-  ctx.fillText('3 VOLCANO POP', 50, 228);
-  ctx.fillText('S SOUND: ' + (settings.soundEnabled ? 'ON' : 'OFF'), 50, 258);
+  // Themes
   ctx.fillStyle = p.textAccent;
-  ctx.fillText('PLAY CONTROLS', 50, 292);
+  ctx.fillText('THEMES', 50, 140);
+  ctx.fillStyle = p.textPrimary;
+  ctx.fillText('1 SUNBURST CLASSIC', 50, 160);
+  ctx.fillText('2 COSMIC WEDGE', 50, 180);
+  ctx.fillText('3 VOLCANO POP', 50, 200);
+  // Modes
+  ctx.fillStyle = p.textAccent;
+  ctx.fillText('MODES', 50, 226);
+  ctx.fillStyle = p.textPrimary;
+  ctx.fillText('4 TOP LANES', 50, 246);
+  ctx.fillText('5 DROP BANK', 50, 264);
+  ctx.fillText('6 SPELL NEON', 50, 282);
+  ctx.fillText('7 BUMPER FRENZY', 50, 300);
+  // Sound
+  ctx.fillText('S SOUND: ' + (settings.soundEnabled ? 'ON' : 'OFF'), 50, 322);
+  // Controls
+  ctx.fillStyle = p.textAccent;
+  ctx.fillText('PLAY CONTROLS', 50, 348);
   ctx.fillStyle = p.textPrimary;
   ctx.font = "8px 'Press Start 2P', monospace";
-  ctx.fillText(controlLines[0], 50, 318);
-  ctx.fillText(controlLines[1], 50, 340);
-  ctx.fillText(controlLines[2], 50, 362);
+  ctx.fillText(controlLines[0], 50, 368);
+  ctx.fillText(controlLines[1], 50, 386);
+  ctx.fillText(controlLines[2], 50, 404);
+  // Rules
   ctx.fillStyle = p.textAccent;
-  ctx.fillText('GAME RULES', 50, 392);
-  ctx.fillStyle = p.textPrimary;
-  ctx.fillText(ruleLines[0], 50, 418);
-  ctx.fillText(ruleLines[1], 50, 440);
   ctx.font = "10px 'Press Start 2P', monospace";
-  ctx.fillText('ENTER APPLY/RESUME', 50, 470);
-  ctx.fillText('ESC CANCEL/RESUME', 50, 492);
+  ctx.fillText('GAME RULES', 50, 428);
+  ctx.fillStyle = p.textPrimary;
+  ctx.font = "8px 'Press Start 2P', monospace";
+  ctx.fillText(ruleLines[0], 50, 448);
+  ctx.fillText(ruleLines[1], 50, 464);
+  // Footer
+  ctx.font = "10px 'Press Start 2P', monospace";
+  ctx.fillText('ENTER APPLY/RESUME', 50, 488);
+  ctx.fillText('ESC CANCEL/RESUME', 50, 506);
   ctx.textAlign = 'center';
-  ctx.fillText('ACTIVE: ' + t.name.toUpperCase(), CONFIG.W/2, 516);
+  ctx.fillText('THEME: ' + t.name.toUpperCase(), CONFIG.W/2, 530);
+  ctx.fillText('MODE: ' + getActiveMode().name.toUpperCase(), CONFIG.W/2, 550);
   ctx.textAlign = 'start';
 }
 
@@ -1197,7 +1584,10 @@ const emitThemeEvent = dispatchThemeEvent;
 window.__test = {
   get ball(){ return ball; },
   get state(){ return state; },
+  get segments(){ return segments; },
   get bumpers(){ return bumperList; },
+  get topLanes(){ return topLaneList; },
+  get drops(){ return dropList; },
   CONFIG,
   step(n=1){ for(let i=0;i<n*CONFIG.MAX_SUBSTEPS;i++) physicsStep(CONFIG.FIXED_DT); render(); },
   pause(){ paused = true; },
@@ -1220,6 +1610,9 @@ window.__test = {
   setSoundFromMenu(enabled){ return applySoundFromMenu(enabled); },
   getThemeId(){ return settings.themeId; },
   isSoundEnabled(){ return settings.soundEnabled; },
+  getGameplayModeId(){ return settings.gameplayModeId; },
+  setGameplayModeFromMenu(id){ return applyGameplayModeFromMenu(id); },
+  get miniLFlipper(){ return flippers.miniL; },
   addScore(points){ applyScore(points); },
   forcePhase(phase){ state.phase = phase; },
   dispatchThemeEvent(type, payload){ emitThemeEvent(type, payload); },
@@ -1229,3 +1622,5 @@ window.__test = {
 </script>
 </body>
 </html>
+
+
