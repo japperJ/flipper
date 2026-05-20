@@ -435,6 +435,18 @@ function addSling(a, b, gain=1.5, value=50){
 const dropList = []; // { c (center), w, h, down, downUntil, value }
 function addDrop(c, w=24, h=8, value=200){ dropList.push({ c, w, h, down:false, downUntil:0, value }); }
 
+const topLaneList = []; // { xMin, xMax, label, lit }
+
+function clearTable(){
+  segments.length = 0;
+  arcRegistry.length = 0;
+  slingList.length = 0;
+  bumperList.length = 0;
+  dropList.length = 0;
+  topLaneList.length = 0;
+  gateSeg = null;
+}
+
 function serveBall(){
   ball.p = { x: 400, y: 680 };
   ball.v = { x: 0, y: 0 };
@@ -459,8 +471,13 @@ function restartGame(){
   state.bumperChainUntil = 0;
   state.extraBallAwarded = false;
   floatTexts.length = 0;
-  for (const bp of bumperList){ bp.hits = 0; bp.flash = 0; }
-  for (const dp of dropList){ dp.down = false; dp.downUntil = 0; }
+  clearTable();
+  buildTable();
+  for (const f of [flippers.L, flippers.R, flippers.miniL].filter(Boolean)){
+    f.angle = f.angleRest;
+    f.angVel = 0;
+    f.pressed = false;
+  }
   serveBall();
 }
 
@@ -725,49 +742,45 @@ const DRAIN_LEFT = 175, DRAIN_RIGHT = 245;
 const KICKBACK_EJECT = { x: 68, y: 510, vx: 340, vy: -580 };
 
 function buildTable(){
-  // Outer perimeter — top (only over playfield, not over shooter lane), left, right
+  const mode = getActiveMode();
+
+  // ── Fixed geometry shared by all modes ──
   addSegment({x:0,   y:24},  {x:SHOOTER_X, y:24});
   addSegment({x:0,   y:24},  {x:0,        y:CONFIG.H});
   addSegment({x:CONFIG.W, y:24}, {x:CONFIG.W, y:CONFIG.H});
-  // Outlane floors slope toward the drain so a ball that comes to rest at the
-  // bottom rolls into it instead of sitting on a flat lip. The shooter-lane
-  // floor stays flat so a freshly served ball doesn't drift away from rest.
   addSegment({x:0,           y:CONFIG.H-20}, {x:DRAIN_LEFT,  y:CONFIG.H});
   addSegment({x:DRAIN_RIGHT,  y:CONFIG.H},   {x:SHOOTER_X,   y:CONFIG.H-20});
   addSegment({x:SHOOTER_X,    y:CONFIG.H-20},{x:CONFIG.W,    y:CONFIG.H-20});
-  // Shooter lane divider runs from the deflector base down to the inlane bend.
   addSegment({x:SHOOTER_X, y:120}, {x:SHOOTER_X, y:CONFIG.H-40});
-  // Launch deflector: steep diagonal at the top of the shooter lane. A fast launched
-  // ball reflects up-and-left and arcs across the top of the playfield before falling
-  // down on the left side — classic launch-lane "around the top" trajectory.
   addSegment({x:SHOOTER_X, y:24}, {x:CONFIG.W, y:120}, { restitution: 0.92 });
 
-  // Outlane separators — sealed at the top by horizontal connectors so no ball
-  // can slip between the separator and the slingshot.
   addSegment({x:32,  y:490}, {x:26,  y:668});
   addSegment({x:388, y:490}, {x:394, y:668});
-  addSegment({x:55,  y:490}, {x:32,  y:490}); // left top connector
-  addSegment({x:365, y:490}, {x:388, y:490}); // right top connector
-  // Inlane guides: channel the ball from slingshot bottom toward each flipper.
+  addSegment({x:55,  y:490}, {x:32,  y:490});
+  addSegment({x:365, y:490}, {x:388, y:490});
   addSegment({x:115, y:600}, {x:120, y:618});
   addSegment({x:305, y:600}, {x:300, y:618});
-  // Mid-table guide rails — deflect balls up toward the bumper cluster.
   addSegment({x:75,  y:440}, {x:130, y:468});
   addSegment({x:345, y:440}, {x:290, y:468});
-  // Five bumpers: three-high plus two flanking for a tight cluster.
-  addBumper({x:140, y:250}, 22, 1.7, 250);
-  addBumper({x:210, y:200}, 22, 1.7, 250);
-  addBumper({x:280, y:250}, 22, 1.7, 250);
-  addBumper({x:100, y:220}, 20, 1.7, 250); // flanking left
-  addBumper({x:320, y:220}, 20, 1.7, 250); // flanking right
 
-  // Slingshots: extended upward for much wider coverage and stronger kick.
   addSling({x:55,  y:490}, {x:115, y:600}, 1.65, 80);
   addSling({x:365, y:490}, {x:305, y:600}, 1.65, 80);
 
-  addDrop({x:170, y:350}, 24, 8, 200);
-  addDrop({x:210, y:350}, 24, 8, 200);
-  addDrop({x:250, y:350}, 24, 8, 200);
+  // ── Mode-specific obstacles ──
+  for (const bp of mode.bumpers) addBumper(bp.c, bp.r, bp.gain, bp.value);
+  for (const dp of mode.drops)   addDrop(dp.c, dp.w, dp.h, dp.value);
+
+  // ── Top lanes ──
+  const xStart = 10, xEnd = 355;
+  const laneWidth = (xEnd - xStart) / mode.laneCount;
+  for (let i = 0; i < mode.laneCount; i++){
+    topLaneList.push({
+      xMin: xStart + i * laneWidth,
+      xMax: xStart + (i + 1) * laneWidth,
+      label: mode.laneLabels ? mode.laneLabels[i] : null,
+      lit: false,
+    });
+  }
 }
 
 buildTable();
@@ -1296,6 +1309,8 @@ window.__test = {
   get ball(){ return ball; },
   get state(){ return state; },
   get bumpers(){ return bumperList; },
+  get topLanes(){ return topLaneList; },
+  get drops(){ return dropList; },
   CONFIG,
   step(n=1){ for(let i=0;i<n*CONFIG.MAX_SUBSTEPS;i++) physicsStep(CONFIG.FIXED_DT); render(); },
   pause(){ paused = true; },

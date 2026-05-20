@@ -612,3 +612,63 @@ test('gameplay mode: invalid persisted value falls back to default', async ({ pa
   const id = await page.evaluate(() => window.__test.getGameplayModeId());
   expect(id).toBe('top-lanes');
 });
+
+test('table: top-lanes mode has 5 bumpers and 3 drops', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('top-lanes');
+    window.__test.restart();
+    return {
+      bumpers: window.__test.bumpers.length,
+      topLanes: window.__test.topLanes.length,
+    };
+  });
+  expect(r.bumpers).toBe(5);
+  expect(r.topLanes).toBe(5);
+});
+
+test('table: bumper-frenzy mode has 6 bumpers and 0 drops', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('bumper-frenzy');
+    window.__test.restart();
+    return {
+      bumpers: window.__test.bumpers.length,
+      topLanes: window.__test.topLanes.length,
+    };
+  });
+  expect(r.bumpers).toBe(6);
+  expect(r.topLanes).toBe(3);
+});
+
+test('table: drop-bank mode has 4 drop targets', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('drop-bank');
+    window.__test.restart();
+    return {
+      drops: window.__test.drops.length,
+      topLanes: window.__test.topLanes.length,
+    };
+  });
+  expect(r.drops).toBe(4);
+  expect(r.topLanes).toBe(3);
+});
+
+test('table: spell-neon mode has 4 top lanes with labels N E O N', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.setGameplayModeFromMenu('spell-neon');
+    window.__test.restart();
+    return window.__test.topLanes.map(l => l.label);
+  });
+  expect(r).toEqual(['N','E','O','N']);
+});
