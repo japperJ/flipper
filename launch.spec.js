@@ -798,3 +798,20 @@ test('right kickback: armed right outlane relaunches ball back into play', async
   expect(r.movedLeft).toBe(true);
   expect(r.balls).toBe(3);
 });
+
+test('cabinet menu: keys 4-7 select gameplay modes', async ({ page }) => {
+  await page.goto(URL);
+  const r = await page.evaluate(() => {
+    window.__test.pause();
+    window.__test.openMenu();
+    window.__test.press('4'); const m4 = window.__test.getGameplayModeId();
+    window.__test.press('5'); const m5 = window.__test.getGameplayModeId();
+    window.__test.press('6'); const m6 = window.__test.getGameplayModeId();
+    window.__test.press('7'); const m7 = window.__test.getGameplayModeId();
+    return { m4, m5, m6, m7 };
+  });
+  expect(r.m4).toBe('top-lanes');
+  expect(r.m5).toBe('drop-bank');
+  expect(r.m6).toBe('spell-neon');
+  expect(r.m7).toBe('bumper-frenzy');
+});

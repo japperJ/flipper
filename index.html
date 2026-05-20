@@ -983,6 +983,10 @@ window.addEventListener('keydown', e=>{
     if (e.key === '1') applyThemeFromMenu('sunburst-classic');
     if (e.key === '2') applyThemeFromMenu('cosmic-wedge');
     if (e.key === '3') applyThemeFromMenu('volcano-pop');
+    if (e.key === '4') applyGameplayModeFromMenu('top-lanes');
+    if (e.key === '5') applyGameplayModeFromMenu('drop-bank');
+    if (e.key === '6') applyGameplayModeFromMenu('spell-neon');
+    if (e.key === '7') applyGameplayModeFromMenu('bumper-frenzy');
     if (e.key === 's' || e.key === 'S') applySoundFromMenu(!settings.soundEnabled);
     if (e.key === 'Enter') closeMenuAndResume();
     return;
@@ -1314,7 +1318,7 @@ function render(){
 
   // HUD panels keep text readable against rails/walls and avoid top-right crowding.
   ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-  ctx.fillRect(6, 6, 248, 78);
+  ctx.fillRect(6, 6, 248, 96);
   ctx.fillRect(300, 6, 114, 82);
 
   ctx.fillStyle = palette.textAccent;
@@ -1386,6 +1390,7 @@ function render(){
   ctx.font = "8px 'Press Start 2P', monospace";
   ctx.textAlign = 'start';
   ctx.fillText(theme.name.toUpperCase(), 8, 76);
+  ctx.fillText(getActiveMode().name.toUpperCase(), 8, 90);
 
   const cabinetHint = getCabinetMenuIndicatorText();
   const hintY = CONFIG.H - 24;
@@ -1409,36 +1414,55 @@ function renderMenuOverlay(){
   const controlLines = getCabinetMenuControlLines();
   const ruleLines = getCabinetMenuRuleLines();
   ctx.fillStyle = 'rgba(0,0,0,0.72)';
-  ctx.fillRect(20, 104, CONFIG.W - 40, 400);
+  ctx.fillRect(20, 80, CONFIG.W - 40, 480);
   ctx.strokeStyle = p.textAccent;
   ctx.lineWidth = 2;
-  ctx.strokeRect(20, 104, CONFIG.W - 40, 400);
+  ctx.strokeRect(20, 80, CONFIG.W - 40, 480);
   ctx.fillStyle = p.textPrimary;
   ctx.font = "10px 'Press Start 2P', monospace";
   ctx.textAlign = 'center';
-  ctx.fillText('CABINET MENU', CONFIG.W/2, 140);
+  ctx.fillText('CABINET MENU', CONFIG.W/2, 114);
   ctx.textAlign = 'left';
-  ctx.fillText('1 SUNBURST CLASSIC', 50, 176);
-  ctx.fillText('2 COSMIC WEDGE', 50, 202);
-  ctx.fillText('3 VOLCANO POP', 50, 228);
-  ctx.fillText('S SOUND: ' + (settings.soundEnabled ? 'ON' : 'OFF'), 50, 258);
+  // Themes
   ctx.fillStyle = p.textAccent;
-  ctx.fillText('PLAY CONTROLS', 50, 292);
+  ctx.fillText('THEMES', 50, 140);
+  ctx.fillStyle = p.textPrimary;
+  ctx.fillText('1 SUNBURST CLASSIC', 50, 160);
+  ctx.fillText('2 COSMIC WEDGE', 50, 180);
+  ctx.fillText('3 VOLCANO POP', 50, 200);
+  // Modes
+  ctx.fillStyle = p.textAccent;
+  ctx.fillText('MODES', 50, 226);
+  ctx.fillStyle = p.textPrimary;
+  ctx.fillText('4 TOP LANES', 50, 246);
+  ctx.fillText('5 DROP BANK', 50, 264);
+  ctx.fillText('6 SPELL NEON', 50, 282);
+  ctx.fillText('7 BUMPER FRENZY', 50, 300);
+  // Sound
+  ctx.fillText('S SOUND: ' + (settings.soundEnabled ? 'ON' : 'OFF'), 50, 322);
+  // Controls
+  ctx.fillStyle = p.textAccent;
+  ctx.fillText('PLAY CONTROLS', 50, 348);
   ctx.fillStyle = p.textPrimary;
   ctx.font = "8px 'Press Start 2P', monospace";
-  ctx.fillText(controlLines[0], 50, 318);
-  ctx.fillText(controlLines[1], 50, 340);
-  ctx.fillText(controlLines[2], 50, 362);
+  ctx.fillText(controlLines[0], 50, 368);
+  ctx.fillText(controlLines[1], 50, 386);
+  ctx.fillText(controlLines[2], 50, 404);
+  // Rules
   ctx.fillStyle = p.textAccent;
-  ctx.fillText('GAME RULES', 50, 392);
-  ctx.fillStyle = p.textPrimary;
-  ctx.fillText(ruleLines[0], 50, 418);
-  ctx.fillText(ruleLines[1], 50, 440);
   ctx.font = "10px 'Press Start 2P', monospace";
-  ctx.fillText('ENTER APPLY/RESUME', 50, 470);
-  ctx.fillText('ESC CANCEL/RESUME', 50, 492);
+  ctx.fillText('GAME RULES', 50, 428);
+  ctx.fillStyle = p.textPrimary;
+  ctx.font = "8px 'Press Start 2P', monospace";
+  ctx.fillText(ruleLines[0], 50, 448);
+  ctx.fillText(ruleLines[1], 50, 464);
+  // Footer
+  ctx.font = "10px 'Press Start 2P', monospace";
+  ctx.fillText('ENTER APPLY/RESUME', 50, 488);
+  ctx.fillText('ESC CANCEL/RESUME', 50, 506);
   ctx.textAlign = 'center';
-  ctx.fillText('ACTIVE: ' + t.name.toUpperCase(), CONFIG.W/2, 516);
+  ctx.fillText('THEME: ' + t.name.toUpperCase(), CONFIG.W/2, 530);
+  ctx.fillText('MODE: ' + getActiveMode().name.toUpperCase(), CONFIG.W/2, 550);
   ctx.textAlign = 'start';
 }
 
