@@ -1007,3 +1007,98 @@ test('integration: top-lanes mult can reach x4 by completing lanes repeatedly', 
   });
   expect(mult).toBeGreaterThanOrEqual(3);
 });
+
+test.describe('mobile: touch controls', () => {
+  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
+
+  test('touch: side taps work both flippers and the cabinet menu', async ({ page }) => {
+    await page.goto(URL);
+    const r = await page.evaluate(() => {
+      const c = document.querySelector('canvas');
+      const rect = c.getBoundingClientRect();
+      const fire = (type, xFrac, yFrac, pointerId) => c.dispatchEvent(new PointerEvent(type, {
+        bubbles: true, cancelable: true, pointerId, pointerType: 'touch', isPrimary: true,
+        buttons: type === 'pointerdown' ? 1 : 0,
+        clientX: rect.left + rect.width * xFrac,
+        clientY: rect.top + rect.height * yFrac,
+      }));
+
+      window.__test.pause();
+      window.__test.restart();
+      window.__test.place(210, 300, 0, 0);
+      window.__test.state.ballWasLaunched = true;
+
+      fire('pointerdown', 0.24, 0.90, 11);
+      window.__test.step(1);
+      const leftDown = window.__test.getFlippers().L.pressed;
+      const miniDown = window.__test.getFlippers().miniL.pressed;
+      fire('pointerup', 0.24, 0.90, 11);
+      window.__test.step(1);
+      const leftUp = window.__test.getFlippers().L.pressed;
+
+      fire('pointerdown', 0.76, 0.90, 12);
+      window.__test.step(1);
+      const rightDown = window.__test.getFlippers().R.pressed;
+      fire('pointerup', 0.76, 0.90, 12);
+      window.__test.step(1);
+
+      // Apron MENU button
+      fire('pointerdown', 450 / 540, 942 / 980, 13);
+      fire('pointerup', 450 / 540, 942 / 980, 13);
+      const menuOpen = window.__test.isMenuOpen();
+
+      // Cosmic Wedge theme row (second theme)
+      fire('pointerdown', 200 / 540, 372 / 980, 14);
+      fire('pointerup', 200 / 540, 372 / 980, 14);
+      const theme = window.__test.getThemeId();
+
+      // Close X in the panel
+      fire('pointerdown', 459 / 540, 277 / 980, 15);
+      fire('pointerup', 459 / 540, 277 / 980, 15);
+      const menuClosed = !window.__test.isMenuOpen();
+
+      return { leftDown, miniDown, leftUp, rightDown, menuOpen, theme, menuClosed };
+    });
+
+    expect(r.leftDown).toBe(true);
+    expect(r.miniDown).toBe(true);
+    expect(r.leftUp).toBe(false);
+    expect(r.rightDown).toBe(true);
+    expect(r.menuOpen).toBe(true);
+    expect(r.theme).toBe('cosmic-wedge');
+    expect(r.menuClosed).toBe(true);
+  });
+
+  test('touch: tapping the table launches a fully charged ball', async ({ page }) => {
+    await page.goto(URL);
+    const r = await page.evaluate(() => {
+      const c = document.querySelector('canvas');
+      const rect = c.getBoundingClientRect();
+      const fire = (type, pointerId) => c.dispatchEvent(new PointerEvent(type, {
+        bubbles: true, cancelable: true, pointerId, pointerType: 'touch', isPrimary: true,
+        buttons: type === 'pointerdown' ? 1 : 0,
+        clientX: rect.left + rect.width * 0.5,
+        clientY: rect.top + rect.height * 0.9,
+      }));
+
+      window.__test.pause();
+      window.__test.restart();
+      fire('pointerdown', 21);
+      const inputDown = window.__test.getInput().plunge;
+      fire('pointerup', 21);
+      const charge = window.__test.getPlunger().charge;
+      window.__test.plungerRelease();
+
+      let highest = Infinity;
+      for (let i = 0; i < 240 * 2; i++){
+        window.__test.step(1);
+        highest = Math.min(highest, window.__test.ball.p.y);
+      }
+      return { inputDown, charge, highest };
+    });
+
+    expect(r.inputDown).toBe(true);
+    expect(r.charge).toBeGreaterThanOrEqual(0.8);
+    expect(r.highest).toBeLessThan(200);
+  });
+});
