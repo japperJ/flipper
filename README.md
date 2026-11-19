@@ -3,13 +3,14 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 ![TinyToolTown](https://img.shields.io/badge/TinyToolTown-Ready-00b894)
 
-Arcade-style browser pinball with a neon cabinet look, theme packs, gameplay modes, light effects, and a pause/cabinet menu.
+A browser pinball machine styled like a retro flipper cabinet: woodgrain sides, chrome rails, an illuminated backglass, a seven-segment score display, painted playfield art, and classic pop bumpers.
 
 ![NEON PINBALL Screenshot](./image.png)
 
 ## Features
 
-- 🎨 3 built-in theme packs:
+- 🕹️ Full retro cabinet presentation: woodgrain body, chrome/brass trim, illuminated backglass marquee, backlit seven-segment scoring, apron instruction card, and side flipper buttons
+- 🎨 3 built-in theme packs, each with its own cabinet and playfield artwork:
   - Sunburst Classic
   - Cosmic Wedge
   - Volcano Pop
@@ -20,7 +21,7 @@ Arcade-style browser pinball with a neon cabinet look, theme packs, gameplay mod
   - Bumper Frenzy
 - 💡 Event-driven lighting effects (bumper/sling/drop/jackpot/drain/game over)
 - 🔊 Theme-specific retro audio with sound toggle
-- 🕹️ Cabinet menu overlay with theme + mode + sound controls
+- 🛠️ Cabinet service-menu overlay with theme + mode + sound controls
 - 💾 Persistent settings (theme, mode, sound) via localStorage
 - 🛟 Left and right kickback saves plus a mini left flipper for outlane recoveries
 - 🎯 Score systems including combo multiplier growth and a one-time extra ball at 500,000 points

@@ -2,20 +2,48 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>NEON PINBALL</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NEON PINBALL — Retro Flipper Machine</title>
 <style>
-  html,body{margin:0;background:#0a0612;color:#fff;font-family:'Press Start 2P',monospace;display:flex;justify-content:center;align-items:center;min-height:100vh;}
-  canvas{background:#0a0612;box-shadow:0 0 40px #5cf3,0 0 80px #f3a3;display:block;image-rendering:pixelated;}
+  /* Press Start 2P — embedded so the cabinet artwork works offline (SIL OFL 1.1). */
+  @font-face{font-family:'Press Start 2P';font-style:normal;font-weight:400;font-display:swap;src:url(data:font/woff2;base64,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) format('woff2');}
+  html,body{margin:0;min-height:100vh;}
+  body{
+    display:flex;justify-content:center;align-items:center;
+    overflow:hidden;color:#fff;font-family:'Press Start 2P',monospace;
+    background:
+      radial-gradient(120% 90% at 50% -10%, #382037 0%, #191122 44%, #07050a 100%);
+  }
+  body::before{
+    content:'';position:fixed;inset:0;pointer-events:none;opacity:.55;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(255,184,106,.045) 0 2px, transparent 2px 24px),
+      repeating-linear-gradient(-45deg, rgba(122,222,255,.035) 0 2px, transparent 2px 24px);
+    -webkit-mask-image:radial-gradient(70% 70% at 50% 45%, #000 0%, transparent 100%);
+    mask-image:radial-gradient(70% 70% at 50% 45%, #000 0%, transparent 100%);
+  }
+  body::after{
+    content:'';position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(45% 35% at 50% 58%, rgba(255,146,60,.10) 0%, transparent 70%);
+  }
+  canvas{
+    position:relative;z-index:1;display:block;width:auto;height:auto;
+    max-height:97vh;max-width:98vw;image-rendering:auto;user-select:none;
+    filter:drop-shadow(0 26px 42px rgba(0,0,0,.7));
+  }
 </style>
 </head>
 <body>
-<canvas id="c" width="420" height="780"></canvas>
+<canvas id="c" width="540" height="980" aria-label="Neon Pinball retro flipper machine"></canvas>
 <script type="module">
 // ============ 1. CONFIG ============
 const CONFIG = {
-  W: 420, H: 720, VIEW_H: 780, HUD_H: 60, TABLE_Y: 60, BALL_R: 11,
+  W: 420, H: 720, BALL_R: 11,
+  // Cabinet presentation. The physics playfield stays a fixed 420x720; these
+  // values only place it inside the illustrated machine body.
+  VIEW_W: 540, VIEW_H: 980,
+  PLAY_X: 60, PLAY_Y: 208, PLAY_W: 420, PLAY_H: 720,
+  BACK_X: 60, BACK_Y: 26, BACK_W: 420, BACK_H: 164,
   GRAVITY: 900, DRAG_PER_SEC: 0.9995,
   FIXED_DT: 1/240, MAX_SUBSTEPS: 4,
 };
@@ -164,6 +192,14 @@ const THEME_PACKS = {
     palette: {
       bg: '#1a1208', lane: '#f5c242', insertOn: '#ffd86b', insertOff: '#6b561d',
       bumperGlow: '#ffd86b', slingGlow: '#ff824d', textPrimary: '#fff4d0', textAccent: '#ffcf5f',
+      displayOn: '#ffb347', displayOff: 'rgba(255,179,71,0.10)',
+    },
+    cabinet: {
+      wood: ['#8a5128', '#4d2a13', '#231006'],
+      trim: '#e9b955', trimDark: '#7d5319',
+      chrome: '#f6e9c8', glass: ['#2c1308', '#0c0402'],
+      art: { core: '#ffd77e', ray: '#f0a13c', ray2: '#b8421a', deep: '#3a1708', accent: '#87d8c4' },
+      playA: '#241309', playB: '#0a0402', paint: '#e9a33c', paint2: '#bc451b', ink: '#2a160b',
     },
     lights: {
       bumper_hit: { type: 'pulse', color: '#ffd86b', life: 0.24, size: 22 },
@@ -189,6 +225,14 @@ const THEME_PACKS = {
     palette: {
       bg: '#0f1626', lane: '#2ad1c9', insertOn: '#ff7043', insertOff: '#4a3a33',
       bumperGlow: '#4dd0e1', slingGlow: '#ff7043', textPrimary: '#e8f7ff', textAccent: '#ffab91',
+      displayOn: '#7fe8ff', displayOff: 'rgba(127,232,255,0.10)',
+    },
+    cabinet: {
+      wood: ['#40315f', '#241740', '#0b0718'],
+      trim: '#8fe3e6', trimDark: '#2b6270',
+      chrome: '#ecf8ff', glass: ['#0a1a33', '#02050d'],
+      art: { core: '#9ff3ff', ray: '#2ad1c9', ray2: '#ff7043', deep: '#081326', accent: '#ffab91' },
+      playA: '#0b1322', playB: '#03060c', paint: '#48c9d4', paint2: '#ff7043', ink: '#e8f7ff',
     },
     lights: {
       bumper_hit: { type: 'pulse', color: '#4dd0e1', life: 0.22, size: 23 },
@@ -214,6 +258,14 @@ const THEME_PACKS = {
     palette: {
       bg: '#1a2a1a', lane: '#9de86b', insertOn: '#ffa726', insertOff: '#5c4a2a',
       bumperGlow: '#8bc34a', slingGlow: '#ff9800', textPrimary: '#f4ffe8', textAccent: '#ffcc80',
+      displayOn: '#ff9b4a', displayOff: 'rgba(255,155,74,0.10)',
+    },
+    cabinet: {
+      wood: ['#633015', '#3a1909', '#160802'],
+      trim: '#ffb24a', trimDark: '#8d4a12',
+      chrome: '#ffe7c2', glass: ['#2b0d06', '#0a0302'],
+      art: { core: '#ffcc80', ray: '#ff7a1a', ray2: '#c62828', deep: '#2a0a04', accent: '#9ccc65' },
+      playA: '#12200e', playB: '#050a04', paint: '#9ccc65', paint2: '#ff8a00', ink: '#f4ffe8',
     },
     lights: {
       bumper_hit: { type: 'strobeBurst', color: '#8bc34a', life: 0.20, size: 24 },
@@ -1170,97 +1222,882 @@ function spawnParticles(x, y, n, color){
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 
-function drawTopLanes(modeAccent){
-  const lanes = topLaneList;
-  if (!lanes.length) return;
-  const theme = getActiveTheme();
-  const palette = theme.palette;
-  const litColor = modeAccent || palette.bumperGlow;
-  const totalW = 345; // xEnd - xStart = 355 - 10
-  const laneW = totalW / lanes.length;
-  const xStart = 10;
-  const yTop = 24;
-  const yBot = 50;
+const VIEW = {
+  W: CONFIG.VIEW_W, H: CONFIG.VIEW_H,
+  PX: CONFIG.PLAY_X, PY: CONFIG.PLAY_Y,
+  PW: CONFIG.PLAY_W, PH: CONFIG.PLAY_H,
+};
+const FONT_PIXEL = "'Press Start 2P', 'Courier New', monospace";
+const FONT_UI = "'Courier New', monospace";
 
-  ctx.save();
-  ctx.lineWidth = 1;
-
-  for (let i = 0; i < lanes.length; i++){
-    const lane = lanes[i];
-    const lx = xStart + i * laneW;
-    const cx = lx + laneW / 2;
-
-    // Lane divider (left edge of each lane)
-    ctx.strokeStyle = lane.lit ? litColor : palette.lane;
-    ctx.shadowColor = lane.lit ? litColor : 'transparent';
-    ctx.shadowBlur = lane.lit ? 6 : 0;
-    ctx.beginPath();
-    ctx.moveTo(lx, yTop);
-    ctx.lineTo(lx, yBot);
-    ctx.stroke();
-
-    // Lane label — show label text if defined, else lane number
-    const labelText = lane.label != null ? lane.label : String(i + 1);
-    ctx.font = '10px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = lane.lit ? litColor : palette.textPrimary;
-    ctx.shadowColor = lane.lit ? litColor : 'transparent';
-    ctx.shadowBlur = lane.lit ? 4 : 0;
-    ctx.fillText(labelText, cx, yBot - 4);
-  }
-
-  // Right edge of last lane — matches last lane's lit state
-  const lastX = xStart + lanes.length * laneW;
-  const lastLane = lanes[lanes.length - 1];
-  ctx.strokeStyle = lastLane.lit ? litColor : palette.lane;
-  ctx.shadowColor = lastLane.lit ? litColor : 'transparent';
-  ctx.shadowBlur = lastLane.lit ? 6 : 0;
-  ctx.beginPath();
-  ctx.moveTo(lastX, yTop);
-  ctx.lineTo(lastX, yBot);
-  ctx.stroke();
-
-  ctx.restore();
+function withAlpha(color, alpha){
+  if (typeof color !== 'string' || color[0] !== '#') return color;
+  let h = color.slice(1);
+  if (h.length === 3) h = h.split('').map(ch => ch + ch).join('');
+  const n = parseInt(h, 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
 }
 
-function render(){
-  const dtRender = 1/60;
-  const nowSec = performance.now()/1000;
-  const superBumpers = bumperSuperActive(nowSec);
-  const theme = getActiveTheme();
-  const palette = theme.palette;
-  const modeAccent = getActiveMode().accentColor || palette.bumperGlow;
-  updateLightEffects(dtRender);
-  trail.push({ x: ball.p.x, y: ball.p.y });
-  if (trail.length > 12) trail.shift();
-  for (let i = particles.length - 1; i >= 0; i--){
-    const p = particles[i];
-    p.vy += 200 * dtRender;
-    p.x += p.vx * dtRender;
-    p.y += p.vy * dtRender;
-    p.life -= dtRender;
-    if (p.life <= 0) particles.splice(i, 1);
-  }
-  if (shake > 0) shake = Math.max(0, shake - dtRender * 30);
+function roundRectPath(c, x, y, w, h, r){
+  const rr = Math.max(0, Math.min(r, w / 2, h / 2));
+  c.beginPath();
+  c.moveTo(x + rr, y);
+  c.lineTo(x + w - rr, y);
+  c.quadraticCurveTo(x + w, y, x + w, y + rr);
+  c.lineTo(x + w, y + h - rr);
+  c.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+  c.lineTo(x + rr, y + h);
+  c.quadraticCurveTo(x, y + h, x, y + h - rr);
+  c.lineTo(x, y + rr);
+  c.quadraticCurveTo(x, y, x + rr, y);
+  c.closePath();
+}
 
-  ctx.fillStyle = palette.bg;
-  ctx.fillRect(0,0,CONFIG.W,CONFIG.VIEW_H);
-  ctx.save();
-  ctx.translate(0, CONFIG.TABLE_Y);
-  if (shake > 0){
-    ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake);
+function drawBolt(c, x, y, r, cab){
+  const g = c.createRadialGradient(x - r * 0.4, y - r * 0.4, r * 0.15, x, y, r);
+  g.addColorStop(0, '#fffdf4');
+  g.addColorStop(0.45, cab.chrome || '#eee');
+  g.addColorStop(1, '#4c4338');
+  c.beginPath();
+  c.arc(x, y, r, 0, Math.PI * 2);
+  c.fillStyle = g;
+  c.fill();
+  c.strokeStyle = 'rgba(0,0,0,0.45)';
+  c.lineWidth = 0.8;
+  c.stroke();
+}
+
+function drawStar(c, cx, cy, outer, inner, color){
+  c.save();
+  c.beginPath();
+  for (let i = 0; i < 10; i++){
+    const r = i % 2 === 0 ? outer : inner;
+    const a = -Math.PI / 2 + i * Math.PI / 5;
+    const x = cx + Math.cos(a) * r;
+    const y = cy + Math.sin(a) * r;
+    if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
   }
-  // Walls (segments)
+  c.closePath();
+  c.fillStyle = color;
+  c.fill();
+  c.restore();
+}
+
+function drawSparkle(c, x, y, r, color){
+  c.save();
+  c.fillStyle = color;
+  c.beginPath();
+  c.moveTo(x, y - r);
+  c.lineTo(x + r * 0.3, y - r * 0.3);
+  c.lineTo(x + r, y);
+  c.lineTo(x + r * 0.3, y + r * 0.3);
+  c.lineTo(x, y + r);
+  c.lineTo(x - r * 0.3, y + r * 0.3);
+  c.lineTo(x - r, y);
+  c.lineTo(x - r * 0.3, y - r * 0.3);
+  c.closePath();
+  c.fill();
+  c.restore();
+}
+
+// ── Seven-segment score displays ──
+const SEG7 = {
+  '0': 'abcdef', '1': 'bc', '2': 'abged', '3': 'abgcd', '4': 'fgbc',
+  '5': 'afgcd', '6': 'afgedc', '7': 'abc', '8': 'abcdefg', '9': 'abcfgd',
+};
+
+function seg7Lines(x, y, w, h){
+  const t = Math.max(2, h * 0.14);
+  const p = t * 0.55;
+  const mid = y + h / 2;
+  return {
+    a: [x + p + t, y + t / 2, x + w - p - t, y + t / 2],
+    b: [x + w - t / 2, y + p + t, x + w - t / 2, mid - p],
+    c: [x + w - t / 2, mid + p, x + w - t / 2, y + h - p - t],
+    d: [x + p + t, y + h - t / 2, x + w - p - t, y + h - t / 2],
+    e: [x + t / 2, mid + p, x + t / 2, y + h - p - t],
+    f: [x + t / 2, y + p + t, x + t / 2, mid - p],
+    g: [x + p + t, mid, x + w - p - t, mid],
+  };
+}
+
+function drawSeg7Digit(c, x, y, w, h, ch, onColor, offColor, glow){
+  const segs = seg7Lines(x, y, w, h);
+  const t = Math.max(2, h * 0.14);
+  c.save();
+  c.lineCap = 'round';
+  c.lineWidth = t;
+  c.strokeStyle = offColor;
+  for (const k in segs){
+    const s = segs[k];
+    c.beginPath(); c.moveTo(s[0], s[1]); c.lineTo(s[2], s[3]); c.stroke();
+  }
+  const lit = SEG7[ch] || '';
+  if (lit){
+    c.strokeStyle = onColor;
+    if (glow){ c.shadowColor = onColor; c.shadowBlur = glow; }
+    for (const k of lit){
+      const s = segs[k];
+      c.beginPath(); c.moveTo(s[0], s[1]); c.lineTo(s[2], s[3]); c.stroke();
+    }
+  }
+  c.restore();
+}
+
+function drawSeg7Number(c, x, y, w, h, gap, value, digits, onColor, offColor, glow){
+  const max = Math.pow(10, digits) - 1;
+  const str = String(Math.max(0, Math.min(max, Math.floor(value)))).padStart(digits, '0');
+  for (let i = 0; i < digits; i++){
+    drawSeg7Digit(c, x + i * (w + gap), y, w, h, str[i], onColor, offColor, glow);
+  }
+}
+
+// ── Static painted layers (cabinet + playfield artwork) ──
+const backdropCanvas = document.createElement('canvas');
+backdropCanvas.width = VIEW.W;
+backdropCanvas.height = VIEW.H;
+const backdropCtx = backdropCanvas.getContext('2d');
+
+const playfieldArtCanvas = document.createElement('canvas');
+playfieldArtCanvas.width = VIEW.PW;
+playfieldArtCanvas.height = VIEW.PH;
+const playfieldArtCtx = playfieldArtCanvas.getContext('2d');
+
+let backdropKey = '';
+let playfieldArtKey = '';
+
+const STAR_FIELD = Array.from({ length: 64 }, () => ({
+  x: Math.random(), y: Math.random(), r: Math.random(),
+}));
+
+function ensureArtLayers(){
+  const key = settings.themeId + '|' + settings.gameplayModeId;
+  if (backdropKey !== key){
+    paintBackdrop(backdropCtx, getActiveTheme());
+    backdropKey = key;
+  }
+  if (playfieldArtKey !== key){
+    paintPlayfield(playfieldArtCtx, getActiveTheme(), getActiveMode());
+    playfieldArtKey = key;
+  }
+}
+
+if (document.fonts && document.fonts.ready){
+  document.fonts.ready.then(() => { backdropKey = ''; playfieldArtKey = ''; }).catch(() => {});
+}
+
+function paintBackglassArt(c, x, y, w, h, theme){
+  const cab = theme.cabinet;
+  const art = cab.art;
+  c.save();
+  c.beginPath();
+  c.rect(x, y, w, h);
+  c.clip();
+
+  if (theme.id === 'cosmic-wedge'){
+    const bg = c.createLinearGradient(x, y, x + w, y + h);
+    bg.addColorStop(0, '#07142b');
+    bg.addColorStop(0.55, '#081326');
+    bg.addColorStop(1, '#02040a');
+    c.fillStyle = bg;
+    c.fillRect(x, y, w, h);
+
+    for (const s of STAR_FIELD){
+      c.globalAlpha = 0.25 + s.r * 0.65;
+      c.fillStyle = s.r > 0.84 ? art.accent : '#dff6ff';
+      c.fillRect(x + s.x * w, y + s.y * h, s.r * 2.2, s.r * 2.2);
+    }
+    c.globalAlpha = 1;
+
+    c.strokeStyle = withAlpha(art.ray, 0.32);
+    c.lineWidth = 1;
+    for (const r of [54, 76, 100]){
+      c.beginPath();
+      c.ellipse(x + w * 0.77, y + h * 0.58, r, r * 0.42, -0.35, 0, Math.PI * 2);
+      c.stroke();
+    }
+
+    const cx = x + w * 0.78, cy = y + h * 0.55, pr = h * 0.24;
+    const pg = c.createRadialGradient(cx - pr * 0.35, cy - pr * 0.4, pr * 0.1, cx, cy, pr);
+    pg.addColorStop(0, '#ffe3c4');
+    pg.addColorStop(0.4, art.ray);
+    pg.addColorStop(0.75, art.ray2);
+    pg.addColorStop(1, '#3a140c');
+    c.beginPath();
+    c.arc(cx, cy, pr, 0, Math.PI * 2);
+    c.fillStyle = pg;
+    c.fill();
+
+    c.strokeStyle = 'rgba(255,255,255,0.6)';
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.ellipse(cx, cy, pr * 1.7, pr * 0.55, -0.32, 0, Math.PI * 2);
+    c.stroke();
+    c.strokeStyle = withAlpha(art.accent, 0.8);
+    c.lineWidth = 1;
+    c.beginPath();
+    c.ellipse(cx, cy, pr * 1.85, pr * 0.62, -0.32, 0, Math.PI * 2);
+    c.stroke();
+
+    c.strokeStyle = 'rgba(255,255,255,0.7)';
+    c.lineWidth = 1.4;
+    c.beginPath();
+    c.moveTo(x + w * 0.64, y + h * 0.18);
+    c.lineTo(x + w * 0.7, y + h * 0.3);
+    c.stroke();
+  } else if (theme.id === 'volcano-pop'){
+    const bg = c.createLinearGradient(x, y, x, y + h);
+    bg.addColorStop(0, '#2a0904');
+    bg.addColorStop(0.55, '#170503');
+    bg.addColorStop(1, '#080201');
+    c.fillStyle = bg;
+    c.fillRect(x, y, w, h);
+
+    const haze = c.createRadialGradient(x + w * 0.8, y + h * 0.55, 2, x + w * 0.8, y + h * 0.55, h * 0.9);
+    haze.addColorStop(0, withAlpha(art.ray, 0.62));
+    haze.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = haze;
+    c.fillRect(x, y, w, h);
+
+    c.fillStyle = '#1c0803';
+    c.beginPath();
+    c.moveTo(x + w * 0.55, y + h);
+    c.lineTo(x + w * 0.7, y + h * 0.45);
+    c.lineTo(x + w * 0.78, y + h * 0.55);
+    c.lineTo(x + w * 0.9, y + h * 0.3);
+    c.lineTo(x + w, y + h);
+    c.closePath();
+    c.fill();
+
+    c.fillStyle = '#260b05';
+    c.beginPath();
+    c.moveTo(x + w * 0.68, y + h);
+    c.lineTo(x + w * 0.8, y + h * 0.38);
+    c.lineTo(x + w * 0.84, y + h * 0.38);
+    c.lineTo(x + w * 0.96, y + h);
+    c.closePath();
+    c.fill();
+
+    c.fillStyle = withAlpha(art.ray, 0.95);
+    c.beginPath();
+    c.ellipse(x + w * 0.82, y + h * 0.39, 10, 3.5, 0, 0, Math.PI * 2);
+    c.fill();
+
+    c.strokeStyle = withAlpha(art.ray, 0.9);
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(x + w * 0.82, y + h * 0.41);
+    c.bezierCurveTo(x + w * 0.79, y + h * 0.55, x + w * 0.84, y + h * 0.7, x + w * 0.8, y + h * 0.85);
+    c.stroke();
+    c.strokeStyle = withAlpha(art.ray2, 0.55);
+    c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(x + w * 0.84, y + h * 0.42);
+    c.bezierCurveTo(x + w * 0.88, y + h * 0.58, x + w * 0.86, y + h * 0.7, x + w * 0.9, y + h * 0.82);
+    c.stroke();
+
+    for (let i = 0; i < 16; i++){
+      const sx = x + w * (0.7 + (i * 37 % 100) / 100 * 0.26);
+      const sy = y + h * (0.12 + (i * 53 % 100) / 100 * 0.3);
+      c.fillStyle = withAlpha(art.core, 0.5);
+      c.fillRect(sx, sy, 2, 2);
+    }
+  } else {
+    const cx = x + w * 0.77, cy = y + h * 0.62;
+    const bg = c.createRadialGradient(cx, cy, 4, cx, cy, h * 1.5);
+    bg.addColorStop(0, art.ray);
+    bg.addColorStop(0.35, art.deep);
+    bg.addColorStop(1, '#070302');
+    c.fillStyle = bg;
+    c.fillRect(x, y, w, h);
+
+    for (let i = 0; i < 26; i++){
+      const a0 = (i / 26) * Math.PI * 2;
+      const a1 = ((i + 1) / 26) * Math.PI * 2;
+      c.beginPath();
+      c.moveTo(cx, cy);
+      c.arc(cx, cy, h * 2.2, a0, a1);
+      c.closePath();
+      c.fillStyle = i % 2 === 0 ? withAlpha(art.ray2, 0.13) : withAlpha(art.core, 0.06);
+      c.fill();
+    }
+
+    const sun = c.createRadialGradient(cx - h * 0.1, cy - h * 0.12, 2, cx, cy, h * 0.3);
+    sun.addColorStop(0, '#fff6d8');
+    sun.addColorStop(0.55, art.core);
+    sun.addColorStop(1, withAlpha(art.ray2, 0.75));
+    c.beginPath();
+    c.arc(cx, cy, h * 0.28, 0, Math.PI * 2);
+    c.fillStyle = sun;
+    c.fill();
+
+    c.strokeStyle = withAlpha(art.core, 0.4);
+    c.lineWidth = 1;
+    for (const r of [h * 0.36, h * 0.46, h * 0.58]){
+      c.beginPath();
+      c.arc(cx, cy, r, 0, Math.PI * 2);
+      c.stroke();
+    }
+
+    for (let i = 0; i < 9; i++){
+      const sx = x + w * (0.52 + (i * 41 % 100) / 100 * 0.42);
+      const sy = y + h * (0.12 + (i * 67 % 100) / 100 * 0.7);
+      drawSparkle(c, sx, sy, 2.5, withAlpha('#fff4cf', 0.7));
+    }
+  }
+  c.restore();
+}
+
+function paintBackglassTitle(c, x, y, w, theme){
+  const cab = theme.cabinet;
+  const p = theme.palette;
+  c.save();
+  c.textAlign = 'left';
+  c.textBaseline = 'alphabetic';
+
+  c.font = `13px ${FONT_PIXEL}`;
+  c.fillStyle = 'rgba(255,248,230,0.92)';
+  c.shadowColor = cab.trim;
+  c.shadowBlur = 10;
+  c.fillText('NEON', x + 18, y + 32);
+
+  c.font = `24px ${FONT_PIXEL}`;
+  const grad = c.createLinearGradient(0, y + 38, 0, y + 76);
+  grad.addColorStop(0, '#fff8e4');
+  grad.addColorStop(0.5, cab.trim);
+  grad.addColorStop(1, withAlpha(cab.trim, 0.62));
+  c.fillStyle = grad;
+  c.shadowColor = cab.trim;
+  c.shadowBlur = 16;
+  c.fillText('PINBALL', x + 18, y + 72);
+  c.shadowBlur = 0;
+  c.lineWidth = 1;
+  c.strokeStyle = 'rgba(0,0,0,0.38)';
+  c.strokeText('PINBALL', x + 18, y + 72);
+
+  c.font = `6px ${FONT_PIXEL}`;
+  c.fillStyle = withAlpha(p.textPrimary, 0.7);
+  c.fillText('RETRO FLIPPER MACHINE', x + 20, y + 90);
+
+  drawSparkle(c, x + 10, y + 54, 4, withAlpha(cab.trim, 0.7));
+  drawSparkle(c, x + w * 0.52, y + 18, 2.5, withAlpha(cab.trim, 0.4));
+  c.restore();
+}
+
+function paintBackdrop(c, theme){
+  const cab = theme.cabinet;
+  const W = VIEW.W, H = VIEW.H;
+  c.clearRect(0, 0, W, H);
+
+  // Machine silhouette / floor shadow
+  c.save();
+  c.shadowColor = 'rgba(0,0,0,0.9)';
+  c.shadowBlur = 34;
+  c.shadowOffsetY = 20;
+  roundRectPath(c, 10, 10, W - 20, H - 20, 28);
+  c.fillStyle = '#0b0604';
+  c.fill();
+  c.restore();
+
+  // Cabinet body
+  const body = c.createLinearGradient(0, 10, 0, H - 10);
+  body.addColorStop(0, cab.wood[0]);
+  body.addColorStop(0.42, cab.wood[1]);
+  body.addColorStop(1, cab.wood[2]);
+  roundRectPath(c, 10, 10, W - 20, H - 20, 28);
+  c.fillStyle = body;
+  c.fill();
+
+  // Wood grain
+  c.save();
+  roundRectPath(c, 10, 10, W - 20, H - 20, 28);
+  c.clip();
+  for (let i = 0; i < 40; i++){
+    const x = 12 + i * 14;
+    c.strokeStyle = withAlpha(cab.wood[0], i % 3 === 0 ? 0.13 : 0.07);
+    c.lineWidth = i % 4 === 0 ? 1.4 : 0.8;
+    c.beginPath();
+    c.moveTo(x, 10);
+    c.bezierCurveTo(x + 7, H * 0.28, x - 9, H * 0.68, x + 4, H - 10);
+    c.stroke();
+  }
+  c.restore();
+
+  // Outer gold trim
+  roundRectPath(c, 10, 10, W - 20, H - 20, 28);
+  c.lineWidth = 3;
+  c.strokeStyle = cab.trim;
+  c.shadowColor = withAlpha(cab.trim, 0.8);
+  c.shadowBlur = 12;
+  c.stroke();
+  c.shadowBlur = 0;
+  roundRectPath(c, 15, 15, W - 30, H - 30, 23);
+  c.lineWidth = 1;
+  c.strokeStyle = 'rgba(255,255,255,0.16)';
+  c.stroke();
+
+  // Side rails
+  for (const side of ['L', 'R']){
+    const x0 = side === 'L' ? 14 : W - 58;
+    const g = c.createLinearGradient(x0, 0, x0 + 44, 0);
+    if (side === 'L'){
+      g.addColorStop(0, cab.wood[2]);
+      g.addColorStop(0.4, cab.wood[1]);
+      g.addColorStop(1, cab.wood[0]);
+    } else {
+      g.addColorStop(0, cab.wood[0]);
+      g.addColorStop(0.6, cab.wood[1]);
+      g.addColorStop(1, cab.wood[2]);
+    }
+    c.fillStyle = g;
+    c.fillRect(x0, 34, 44, H - 68);
+  }
+  c.strokeStyle = withAlpha(cab.trim, 0.55);
+  c.lineWidth = 1;
+  for (const x of [19, 23, W - 23, W - 19]){
+    c.beginPath();
+    c.moveTo(x, 58);
+    c.lineTo(x, H - 64);
+    c.stroke();
+  }
+  for (const bx of [26, W - 26]){
+    for (const by of [70, 190, 310, 650, 770, 890]) drawBolt(c, bx, by, 4, cab);
+  }
+
+  c.save();
+  c.translate(34, 500);
+  c.rotate(-Math.PI / 2);
+  c.font = `9px ${FONT_PIXEL}`;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillStyle = withAlpha(cab.trim, 0.48);
+  c.fillText('NEON', 0, 0);
+  c.restore();
+
+  c.save();
+  c.translate(W - 34, 500);
+  c.rotate(Math.PI / 2);
+  c.font = `9px ${FONT_PIXEL}`;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillStyle = withAlpha(cab.trim, 0.48);
+  c.fillText('PINBALL', 0, 0);
+  c.restore();
+
+  // Backglass frame
+  const BX = CONFIG.BACK_X, BY = CONFIG.BACK_Y, BW = CONFIG.BACK_W, BH = CONFIG.BACK_H;
+  c.save();
+  c.shadowColor = 'rgba(0,0,0,0.72)';
+  c.shadowBlur = 18;
+  c.shadowOffsetY = 6;
+  roundRectPath(c, BX - 6, BY - 6, BW + 12, BH + 12, 12);
+  c.fillStyle = '#100805';
+  c.fill();
+  c.restore();
+
+  const frameGrad = c.createLinearGradient(BX, BY, BX, BY + BH);
+  frameGrad.addColorStop(0, cab.trim);
+  frameGrad.addColorStop(0.32, withAlpha(cab.trim, 0.5));
+  frameGrad.addColorStop(0.62, cab.trim);
+  frameGrad.addColorStop(1, cab.trimDark);
+  roundRectPath(c, BX - 4, BY - 4, BW + 8, BH + 8, 10);
+  c.lineWidth = 3;
+  c.strokeStyle = frameGrad;
+  c.stroke();
+
+  const glass = c.createLinearGradient(0, BY, 0, BY + BH);
+  glass.addColorStop(0, cab.glass[0]);
+  glass.addColorStop(1, cab.glass[1]);
+  roundRectPath(c, BX, BY, BW, BH, 7);
+  c.fillStyle = glass;
+  c.fill();
+
+  // Art + glass reflection
+  c.save();
+  roundRectPath(c, BX, BY, BW, BH, 7);
+  c.clip();
+  paintBackglassArt(c, BX, BY, BW, 100, theme);
+  paintBackglassTitle(c, BX, BY, BW, theme);
+  const shine = c.createLinearGradient(BX, BY, BX + BW * 0.8, BY + BH);
+  shine.addColorStop(0, 'rgba(255,255,255,0.10)');
+  shine.addColorStop(0.28, 'rgba(255,255,255,0)');
+  shine.addColorStop(0.7, 'rgba(255,255,255,0)');
+  shine.addColorStop(1, 'rgba(255,255,255,0.045)');
+  c.fillStyle = shine;
+  c.fillRect(BX, BY, BW, BH);
+  c.restore();
+
+  // Display glass
+  const dy = BY + 100;
+  const display = c.createLinearGradient(0, dy, 0, BY + BH);
+  display.addColorStop(0, 'rgba(0,0,0,0.72)');
+  display.addColorStop(1, 'rgba(0,0,0,0.92)');
+  c.fillStyle = display;
+  c.fillRect(BX + 1, dy, BW - 2, BH - 101);
+  c.strokeStyle = withAlpha(cab.trim, 0.5);
+  c.lineWidth = 1;
+  c.beginPath();
+  c.moveTo(BX + 6, dy);
+  c.lineTo(BX + BW - 6, dy);
+  c.stroke();
+
+  c.strokeStyle = 'rgba(255,255,255,0.08)';
+  for (const dx of [BX + 156, BX + 194, BX + 232]){
+    c.beginPath();
+    c.moveTo(dx, dy + 8);
+    c.lineTo(dx, BY + BH - 8);
+    c.stroke();
+  }
+
+  // Playfield bezel
+  const pX = CONFIG.PLAY_X, pY = CONFIG.PLAY_Y, pW = CONFIG.PLAY_W, pH = CONFIG.PLAY_H;
+  c.save();
+  c.shadowColor = 'rgba(0,0,0,0.8)';
+  c.shadowBlur = 14;
+  c.shadowOffsetY = 4;
+  roundRectPath(c, pX - 5, pY - 5, pW + 10, pH + 10, 10);
+  c.fillStyle = '#0b0604';
+  c.fill();
+  c.restore();
+  roundRectPath(c, pX - 5, pY - 5, pW + 10, pH + 10, 10);
+  c.lineWidth = 2;
+  c.strokeStyle = cab.trim;
+  c.stroke();
+  roundRectPath(c, pX - 1, pY - 1, pW + 2, pH + 2, 4);
+  c.lineWidth = 2;
+  c.strokeStyle = 'rgba(0,0,0,0.75)';
+  c.stroke();
+  for (const [bx, by] of [[pX + 8, pY + 8], [pX + pW - 8, pY + 8], [pX + 8, pY + pH - 8], [pX + pW - 8, pY + pH - 8]]){
+    drawBolt(c, bx, by, 3, cab);
+  }
+
+  // Brass nameplate, drawn over the bezel seam like a real cabinet plate
+  const px = BX + 6, py = BY + BH, pw = BW - 12, ph = 16;
+  const plaque = c.createLinearGradient(0, py, 0, py + ph);
+  plaque.addColorStop(0, cab.trim);
+  plaque.addColorStop(0.55, withAlpha(cab.trim, 0.72));
+  plaque.addColorStop(1, cab.trimDark);
+  c.save();
+  c.shadowColor = 'rgba(0,0,0,0.65)';
+  c.shadowBlur = 8;
+  c.shadowOffsetY = 3;
+  roundRectPath(c, px, py, pw, ph, 3);
+  c.fillStyle = plaque;
+  c.fill();
+  c.restore();
+  roundRectPath(c, px, py, pw, ph, 3);
+  c.strokeStyle = 'rgba(0,0,0,0.5)';
+  c.lineWidth = 1;
+  c.stroke();
+  c.font = `7px ${FONT_PIXEL}`;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillStyle = 'rgba(24,10,4,0.9)';
+  c.fillText(theme.name.toUpperCase(), px + pw / 2, py + ph / 2 + 1);
+
+  // Apron under the playfield
+  const ay = pY + pH;
+  const apron = c.createLinearGradient(0, ay, 0, ay + 30);
+  apron.addColorStop(0, '#3b1410');
+  apron.addColorStop(0.5, '#25100c');
+  apron.addColorStop(1, '#160807');
+  c.fillStyle = apron;
+  c.fillRect(pX, ay, pW, 30);
+  c.strokeStyle = withAlpha(cab.trim, 0.7);
+  c.lineWidth = 1.5;
+  c.beginPath();
+  c.moveTo(pX, ay);
+  c.lineTo(pX + pW, ay);
+  c.stroke();
+  c.strokeStyle = 'rgba(0,0,0,0.8)';
+  c.beginPath();
+  c.moveTo(pX, ay + 30);
+  c.lineTo(pX + pW, ay + 30);
+  c.stroke();
+  for (const bx of [pX + 10, pX + pW - 10]) drawBolt(c, bx, ay + 8, 2.6, cab);
+
+  roundRectPath(c, 20, H - 26, W - 40, 12, 6);
+  c.fillStyle = withAlpha(cab.wood[2], 0.85);
+  c.fill();
+  c.strokeStyle = withAlpha(cab.trim, 0.55);
+  c.lineWidth = 1;
+  c.stroke();
+}
+
+function paintPlayfield(c, theme, mode){
+  const p = theme.palette;
+  const cab = theme.cabinet;
+  const W = CONFIG.PLAY_W, H = CONFIG.PLAY_H;
+  c.clearRect(0, 0, W, H);
+
+  const bg = c.createRadialGradient(W * 0.5, 280, 40, W * 0.5, 380, 620);
+  bg.addColorStop(0, cab.playA);
+  bg.addColorStop(0.55, cab.playB);
+  bg.addColorStop(1, '#020101');
+  c.fillStyle = bg;
+  c.fillRect(0, 0, W, H);
+
+  // Painted motif
+  c.save();
+  c.beginPath();
+  c.rect(0, 0, W, H);
+  c.clip();
+
+  if (theme.id === 'cosmic-wedge'){
+    for (const s of STAR_FIELD){
+      c.fillStyle = withAlpha('#dff6ff', 0.12 + s.r * 0.35);
+      c.fillRect(s.x * W, s.y * H, 1.8, 1.8);
+    }
+    c.strokeStyle = withAlpha(cab.paint, 0.1);
+    c.lineWidth = 1.5;
+    for (const r of [70, 105, 145]){
+      c.beginPath();
+      c.ellipse(210, 300, r, r * 0.5, -0.35, 0, Math.PI * 2);
+      c.stroke();
+    }
+    c.beginPath();
+    c.arc(210, 300, 60, 0, Math.PI * 2);
+    c.stroke();
+    c.strokeStyle = withAlpha(cab.paint2, 0.14);
+    c.beginPath();
+    c.moveTo(20, 160);
+    c.lineTo(400, 420);
+    c.stroke();
+  } else if (theme.id === 'volcano-pop'){
+    c.fillStyle = 'rgba(0,0,0,0.22)';
+    c.beginPath();
+    c.moveTo(0, 380);
+    c.lineTo(90, 240);
+    c.lineTo(150, 320);
+    c.lineTo(230, 190);
+    c.lineTo(310, 330);
+    c.lineTo(420, 250);
+    c.lineTo(420, 430);
+    c.lineTo(0, 430);
+    c.closePath();
+    c.fill();
+
+    c.strokeStyle = withAlpha(cab.paint2, 0.18);
+    c.lineWidth = 2;
+    for (let i = 0; i < 6; i++){
+      const x = 30 + i * 70;
+      c.beginPath();
+      c.moveTo(x, 720);
+      c.bezierCurveTo(x + 8, 660, x - 12, 620, x + 16, 560);
+      c.stroke();
+    }
+    for (let i = 0; i < 22; i++){
+      c.fillStyle = withAlpha(cab.paint, 0.14);
+      c.fillRect(20 + (i * 53 % 380), 110 + (i * 71 % 520), 2, 2);
+    }
+  } else {
+    const cx = W * 0.5, cy = 330;
+    for (let i = 0; i < 18; i++){
+      const a0 = (i / 18) * Math.PI * 2;
+      const a1 = ((i + 1) / 18) * Math.PI * 2;
+      c.beginPath();
+      c.moveTo(cx, cy);
+      c.arc(cx, cy, 760, a0, a1);
+      c.closePath();
+      c.fillStyle = i % 2 === 0 ? withAlpha(cab.paint, 0.045) : withAlpha(cab.paint2, 0.02);
+      c.fill();
+    }
+    c.strokeStyle = withAlpha(cab.paint, 0.12);
+    c.lineWidth = 2;
+    for (const r of [120, 175, 235]){
+      c.beginPath();
+      c.arc(cx, cy, r, 0, Math.PI * 2);
+      c.stroke();
+    }
+    c.strokeStyle = withAlpha(cab.paint2, 0.16);
+    c.lineWidth = 5;
+    c.beginPath();
+    c.arc(cx, cy, 300, Math.PI * 1.2, Math.PI * 1.8);
+    c.stroke();
+    for (let i = 0; i < 7; i++){
+      drawSparkle(c, 40 + (i * 67) % 340, 90 + (i * 113) % 520, 4, withAlpha(cab.paint, 0.18));
+    }
+  }
+  c.restore();
+
+  // Painted side ribbons
+  c.save();
+  c.lineCap = 'round';
+  for (const side of [-1, 1]){
+    c.strokeStyle = withAlpha(cab.paint2, 0.07);
+    c.lineWidth = 20;
+    c.beginPath();
+    c.moveTo(210 + side * 36, 350);
+    c.bezierCurveTo(210 + side * 160, 410, 210 + side * 196, 520, 210 + side * 148, 650);
+    c.stroke();
+    c.strokeStyle = withAlpha(cab.paint, 0.06);
+    c.lineWidth = 7;
+    c.beginPath();
+    c.moveTo(210 + side * 52, 360);
+    c.bezierCurveTo(210 + side * 172, 430, 210 + side * 184, 530, 210 + side * 138, 650);
+    c.stroke();
+  }
+  c.restore();
+
+  // Scattered painted stars
+  for (let i = 0; i < 8; i++){
+    const sx = 30 + (i * 83 % 360);
+    const sy = 120 + (i * 137 % 500);
+    drawSparkle(c, sx, sy, 2 + (i % 3), withAlpha(cab.paint, 0.14));
+  }
+
+  // Lacquer streaks
+  c.save();
+  c.strokeStyle = 'rgba(255,255,255,0.018)';
+  c.lineWidth = 14;
+  for (let i = -6; i < 20; i++){
+    c.beginPath();
+    c.moveTo(-40 + i * 42, 0);
+    c.lineTo(80 + i * 42, H);
+    c.stroke();
+  }
+  c.restore();
+
+  // Faint wordmark
+  c.save();
+  c.globalAlpha = 0.055;
+  c.font = `34px ${FONT_PIXEL}`;
+  c.fillStyle = cab.paint;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillText('NEON', W / 2, 460);
+  c.restore();
+
+  // Painted objective
+  if (mode){
+    c.save();
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.font = 'bold 9px ' + FONT_UI;
+    c.fillStyle = withAlpha(mode.accentColor || p.bumperGlow, 0.55);
+    c.fillText('MODE // ' + mode.objective.replace('→', '>').toUpperCase(), W / 2, 548);
+    c.strokeStyle = withAlpha(mode.accentColor || p.bumperGlow, 0.22);
+    c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(W / 2 - 104, 559);
+    c.lineTo(W / 2 + 104, 559);
+    c.stroke();
+    c.restore();
+  }
+
+  // Lane arrows
+  const laneCount = Math.max(1, mode ? mode.laneCount : 5);
+  const laneW = 345 / laneCount;
+  c.save();
+  for (let i = 0; i < laneCount; i++){
+    const cx = 10 + laneW * i + laneW / 2;
+    c.fillStyle = withAlpha(cab.paint, 0.3);
+    c.beginPath();
+    c.moveTo(cx, 62);
+    c.lineTo(cx + 7, 72);
+    c.lineTo(cx + 2.5, 72);
+    c.lineTo(cx + 2.5, 82);
+    c.lineTo(cx - 2.5, 82);
+    c.lineTo(cx - 2.5, 72);
+    c.lineTo(cx - 7, 72);
+    c.closePath();
+    c.fill();
+  }
+  c.restore();
+
+  // Decorative border
+  roundRectPath(c, 6, 6, W - 12, H - 12, 8);
+  c.lineWidth = 2;
+  c.strokeStyle = withAlpha(cab.paint, 0.3);
+  c.stroke();
+  roundRectPath(c, 11, 11, W - 22, H - 22, 6);
+  c.lineWidth = 1;
+  c.strokeStyle = withAlpha(cab.paint, 0.14);
+  c.stroke();
+  for (const [cx, cy] of [[16, 16], [W - 16, 16], [16, H - 16], [W - 16, H - 16]]){
+    drawSparkle(c, cx, cy, 4, withAlpha(cab.paint, 0.4));
+  }
+
+  // Side lamp sockets
+  for (const x of [11, W - 11]){
+    for (let i = 0; i < 11; i++){
+      const y = 82 + i * 56;
+      c.beginPath();
+      c.arc(x, y, 4.2, 0, Math.PI * 2);
+      c.fillStyle = 'rgba(0,0,0,0.55)';
+      c.fill();
+      c.strokeStyle = withAlpha(cab.paint, 0.32);
+      c.lineWidth = 1;
+      c.stroke();
+    }
+  }
+
+  // Shooter lane chevrons
+  c.save();
+  c.strokeStyle = withAlpha(cab.paint, 0.18);
+  c.lineWidth = 1;
+  for (let i = 0; i < 4; i++){
+    const y = 600 - i * 22;
+    c.beginPath();
+    c.moveTo(388, y);
+    c.lineTo(412, y - 7);
+    c.stroke();
+  }
+  c.restore();
+
+  // Glass reflection
+  c.save();
+  const shine = c.createLinearGradient(0, 0, W, H);
+  shine.addColorStop(0, 'rgba(255,255,255,0.06)');
+  shine.addColorStop(0.25, 'rgba(255,255,255,0)');
+  shine.addColorStop(0.72, 'rgba(255,255,255,0)');
+  shine.addColorStop(1, 'rgba(255,255,255,0.025)');
+  c.fillStyle = shine;
+  c.fillRect(0, 0, W, H);
+  c.restore();
+}
+
+// ── Dynamic objects ──
+function drawPlayfieldBulbs(nowSec, palette){
+  const step = Math.floor(nowSec * 5);
+  for (const x of [11, CONFIG.W - 11]){
+    for (let i = 0; i < 11; i++){
+      const y = 82 + i * 56;
+      const on = (i + step + (x > 200 ? 1 : 0)) % 3 === 0;
+      ctx.beginPath();
+      ctx.arc(x, y, 3.2, 0, Math.PI * 2);
+      if (on){
+        ctx.fillStyle = palette.insertOn;
+        ctx.shadowColor = palette.insertOn;
+        ctx.shadowBlur = 7;
+      } else {
+        ctx.fillStyle = withAlpha(palette.insertOn, 0.14);
+      }
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+}
+
+function drawWalls(nowSec, theme, modeAccent){
+  const metal = ctx.createLinearGradient(0, 0, CONFIG.W, 0);
+  metal.addColorStop(0, '#7d8794');
+  metal.addColorStop(0.18, '#e8eef6');
+  metal.addColorStop(0.42, '#98a3b1');
+  metal.addColorStop(0.68, '#f1f6fb');
+  metal.addColorStop(0.86, '#87919e');
+  metal.addColorStop(1, '#5f6975');
+
+  ctx.save();
   ctx.lineCap = 'round';
   for (const s of segments){
     if (s.enabled === false) continue;
-    if (s.kind === 'sling') continue; // rendered separately below
+    if (s.kind === 'sling') continue;
     if (s.kind === 'guide'){
-      // Mode guide rails — animated flowing dash to signal active mode
-      const dashOffset = -(performance.now() / 12.5) % 26;  // flows "up" the rail
+      const dashOffset = -(performance.now() / 12.5) % 26;
       ctx.strokeStyle = modeAccent;
       ctx.shadowColor = modeAccent;
-      ctx.shadowBlur = 8 + 4 * Math.sin(nowSec * 3);
+      ctx.shadowBlur = 9 + 4 * Math.sin(nowSec * 3);
       ctx.lineWidth = 3;
       ctx.setLineDash([8, 5]);
       ctx.lineDashOffset = dashOffset;
@@ -1273,19 +2110,36 @@ function render(){
       ctx.shadowBlur = 0;
       continue;
     }
-    ctx.strokeStyle = palette.lane;
-    ctx.shadowColor = palette.insertOn;
-    ctx.shadowBlur = 8;
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.moveTo(s.a.x, s.a.y + 1);
+    ctx.lineTo(s.b.x, s.b.y + 1);
+    ctx.stroke();
+
+    ctx.strokeStyle = metal;
+    ctx.lineWidth = 3.4;
     ctx.beginPath();
     ctx.moveTo(s.a.x, s.a.y);
     ctx.lineTo(s.b.x, s.b.y);
     ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(s.a.x, s.a.y - 0.8);
+    ctx.lineTo(s.b.x, s.b.y - 0.8);
+    ctx.stroke();
   }
-  ctx.shadowBlur = 0;
-  // Arcs — drawn with mode accent + breathing glow
+
   for (const ar of arcRegistry){
-    const pulse = 6 + 4 * Math.sin(nowSec * 3 + ar.c.x * 0.02);
+    const pulse = 7 + 4 * Math.sin(nowSec * 3 + ar.c.x * 0.02);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.arc(ar.c.x, ar.c.y, ar.R, ar.a0, ar.a1);
+    ctx.stroke();
     ctx.strokeStyle = modeAccent;
     ctx.shadowColor = modeAccent;
     ctx.shadowBlur = pulse;
@@ -1293,267 +2147,1019 @@ function render(){
     ctx.beginPath();
     ctx.arc(ar.c.x, ar.c.y, ar.R, ar.a0, ar.a1);
     ctx.stroke();
+    ctx.restore();
   }
-  ctx.shadowBlur = 0;
-  // Drain gap label — this is an OPENING in the floor, not a wall.
-  ctx.fillStyle = 'rgba(255, 80, 110, 0.85)';
-  ctx.font = 'bold 11px system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'bottom';
-  ctx.fillText('▼ DRAIN ▼', (DRAIN_LEFT + DRAIN_RIGHT) / 2, CONFIG.H - 2);
-  for (const f of [flippers.L, flippers.R, flippers.miniL].filter(Boolean)){
-    const tip = flipperTip(f);
-    ctx.strokeStyle = '#fd5';
-    ctx.lineCap = 'round';
-    ctx.lineWidth = f === flippers.miniL ? 8 : 14;
-    ctx.beginPath(); ctx.moveTo(f.pivot.x,f.pivot.y); ctx.lineTo(tip.x,tip.y); ctx.stroke();
-  }
-  for (const bp of bumperList){
-    // Expanding ring when recently hit so the player clearly sees the bumper fire.
-    if (bp.flash > 0){
-      const t = 1 - (bp.flash / 0.45); // 0..1 over the flash lifetime
-      ctx.save();
-      ctx.globalAlpha = 1 - t;
-      ctx.strokeStyle = palette.insertOn;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(bp.c.x, bp.c.y, bp.r + t * 22, 0, 2*Math.PI);
-      ctx.stroke();
-      ctx.restore();
+  ctx.restore();
+}
+
+function drawTopLanes(modeAccent){
+  const lanes = topLaneList;
+  if (!lanes.length) return;
+  const theme = getActiveTheme();
+  const p = theme.palette;
+  const litColor = modeAccent || p.bumperGlow;
+  const xStart = 10, xEnd = 355, yTop = 24, yBot = 50;
+  const laneW = (xEnd - xStart) / lanes.length;
+
+  ctx.save();
+  for (let i = 0; i < lanes.length; i++){
+    const lane = lanes[i];
+    const lx = xStart + i * laneW;
+    const cx = lx + laneW / 2;
+
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(lx, yTop); ctx.lineTo(lx, yBot); ctx.stroke();
+    ctx.strokeStyle = 'rgba(240,246,252,0.9)';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(lx, yTop); ctx.lineTo(lx, yBot); ctx.stroke();
+
+    const lit = lane.lit;
+    const r = Math.min(11, laneW / 2 - 3);
+    ctx.beginPath();
+    ctx.arc(cx, 37, r + 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx, 37, r, 0, Math.PI * 2);
+    if (lit){
+      const g = ctx.createRadialGradient(cx - r * 0.3, 33, 1, cx, 37, r);
+      g.addColorStop(0, '#ffffff');
+      g.addColorStop(0.55, litColor);
+      g.addColorStop(1, withAlpha(litColor, 0.55));
+      ctx.fillStyle = g;
+      ctx.shadowColor = litColor;
+      ctx.shadowBlur = 14;
+    } else {
+      ctx.fillStyle = withAlpha(p.insertOff, 0.9);
     }
-    if (superBumpers){
-      const pulse = 0.5 + 0.5*Math.sin(performance.now()/120 + bp.c.x*0.02);
-      ctx.save();
-      ctx.globalAlpha = 0.22 + pulse * 0.2;
-      ctx.strokeStyle = palette.bumperGlow;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(bp.c.x, bp.c.y, bp.r + 8 + pulse * 8, 0, 2*Math.PI);
-      ctx.stroke();
-      ctx.restore();
-    }
-    ctx.fillStyle = bp.flash > 0 ? '#fff' : (superBumpers ? palette.insertOn : modeAccent);
-    ctx.shadowColor = superBumpers ? palette.insertOn : modeAccent;
-    ctx.shadowBlur = bp.flash > 0 ? 24 : (superBumpers ? 20 : 12);
-    // Bumper-frenzy: cosmetic size pulse — draw radius only, never mutate bp.r
-    const drawR = (getActiveMode().id === 'bumper-frenzy' && !bp.flash)
-      ? bp.r * (1 + 0.07 * Math.sin(nowSec * 5 + bp.c.x * 0.03))
-      : bp.r;
-    ctx.beginPath(); ctx.arc(bp.c.x, bp.c.y, drawR, 0, 2*Math.PI); ctx.fill();
+    ctx.fill();
     ctx.shadowBlur = 0;
-    // Show the per-bumper hit counter so the player sees these have a purpose.
-    ctx.fillStyle = bp.flash > 0 ? '#06283c' : '#06283c';
-    ctx.font = 'bold 14px system-ui, sans-serif';
+    ctx.strokeStyle = lit ? withAlpha(litColor, 0.95) : 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    const labelText = lane.label != null ? lane.label : String(i + 1);
+    ctx.font = `7px ${FONT_PIXEL}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(String(bp.hits), bp.c.x, bp.c.y + 1);
-    bp.flash = Math.max(0, bp.flash - 1/60);
+    ctx.fillStyle = lit ? '#1a0d05' : withAlpha(p.textPrimary, 0.85);
+    ctx.fillText(labelText, cx, 37.5);
   }
-   drawTopLanes(modeAccent);
-  for (const sl of slingList){
-    ctx.strokeStyle = sl.flash > 0 ? '#fff' : palette.slingGlow;
-    ctx.lineWidth = 6; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(sl.a.x, sl.a.y); ctx.lineTo(sl.b.x, sl.b.y); ctx.stroke();
-    sl.flash = Math.max(0, sl.flash - 1/60);
-  }
-  for (const dp of dropList){
-    if (dp.down) continue;
-    ctx.fillStyle = modeAccent;
-    ctx.shadowColor = modeAccent; ctx.shadowBlur = 4;
-    ctx.fillRect(dp.c.x - dp.w/2, dp.c.y - dp.h/2, dp.w, dp.h);
+
+  const lastX = xStart + lanes.length * laneW;
+  ctx.strokeStyle = 'rgba(240,246,252,0.85)';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(lastX, yTop); ctx.lineTo(lastX, yBot); ctx.stroke();
+  ctx.restore();
+}
+
+function drawBumpers(nowSec, theme, modeAccent, superBumpers){
+  const p = theme.palette;
+  const mode = getActiveMode();
+  for (const bp of bumperList){
+    const drawR = (mode.id === 'bumper-frenzy' && !bp.flash)
+      ? bp.r * (1 + 0.07 * Math.sin(nowSec * 5 + bp.c.x * 0.03))
+      : bp.r;
+    const lit = bp.flash > 0;
+    const x = bp.c.x, y = bp.c.y;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.beginPath();
+    ctx.ellipse(x + 2, y + 5, drawR + 3, drawR * 0.9, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (lit){
+      const t = 1 - (bp.flash / 0.45);
+      ctx.globalAlpha = Math.max(0, 1 - t);
+      ctx.strokeStyle = '#fff3c4';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(x, y, drawR + t * 24, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    if (superBumpers){
+      const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 120 + x * 0.02);
+      ctx.globalAlpha = 0.2 + pulse * 0.25;
+      ctx.strokeStyle = p.insertOn;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, drawR + 8 + pulse * 8, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    const chrome = ctx.createLinearGradient(x - drawR, y - drawR, x + drawR, y + drawR);
+    chrome.addColorStop(0, '#fffdf4');
+    chrome.addColorStop(0.25, '#cbd5df');
+    chrome.addColorStop(0.5, '#78838f');
+    chrome.addColorStop(0.75, '#eef4fa');
+    chrome.addColorStop(1, '#6b7580');
+    ctx.beginPath();
+    ctx.arc(x, y, drawR + 3, 0, Math.PI * 2);
+    ctx.lineWidth = 4.5;
+    ctx.strokeStyle = chrome;
+    ctx.stroke();
+
+    const skirt = ctx.createRadialGradient(x - drawR * 0.35, y - drawR * 0.4, drawR * 0.15, x, y, drawR);
+    skirt.addColorStop(0, lit ? '#ffffff' : '#ffe4a8');
+    skirt.addColorStop(0.35, lit ? '#ffe9b5' : modeAccent);
+    skirt.addColorStop(0.85, lit ? modeAccent : withAlpha(modeAccent, 0.55));
+    skirt.addColorStop(1, withAlpha('#000000', 0.55));
+    ctx.beginPath();
+    ctx.arc(x, y, drawR, 0, Math.PI * 2);
+    ctx.fillStyle = skirt;
+    if (lit || superBumpers){
+      ctx.shadowColor = modeAccent;
+      ctx.shadowBlur = 18;
+    }
+    ctx.fill();
     ctx.shadowBlur = 0;
+
+    ctx.beginPath();
+    ctx.arc(x, y, drawR * 0.72, 0, Math.PI * 2);
+    ctx.fillStyle = lit ? 'rgba(255,255,255,0.85)' : withAlpha('#1a0d06', 0.32);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x, y, drawR * 0.62, 0, Math.PI * 2);
+    ctx.strokeStyle = lit ? 'rgba(255,255,255,0.9)' : withAlpha('#fff6d8', 0.45);
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+
+    drawStar(ctx, x, y - drawR * 0.12, drawR * 0.42, drawR * 0.17, withAlpha('#2a1408', lit ? 0.16 : 0.38));
+
+    ctx.font = `bold ${Math.max(8, Math.round(drawR * 0.5))}px ${FONT_UI}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#2a1408';
+    ctx.fillText(String(bp.hits), x, y + 1);
+    ctx.restore();
+
+    bp.flash = Math.max(0, bp.flash - 1 / 60);
   }
+}
+
+function drawSlings(theme){
+  const p = theme.palette;
+  for (const sl of slingList){
+    const sign = sl.a.x < CONFIG.W / 2 ? 1 : -1;
+    const c = { x: sl.a.x + sign * 13, y: sl.b.y };
+    ctx.save();
+
+    ctx.beginPath();
+    ctx.moveTo(sl.a.x, sl.a.y);
+    ctx.lineTo(sl.b.x, sl.b.y);
+    ctx.lineTo(c.x, c.y);
+    ctx.closePath();
+    const body = ctx.createLinearGradient(sl.a.x, sl.a.y, c.x, c.y);
+    body.addColorStop(0, withAlpha(p.slingGlow, 0.32));
+    body.addColorStop(1, withAlpha('#000000', 0.28));
+    ctx.fillStyle = body;
+    ctx.fill();
+    ctx.strokeStyle = withAlpha(p.slingGlow, 0.35);
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    for (const post of [sl.a, sl.b, c]){
+      const pg = ctx.createRadialGradient(post.x - 2, post.y - 2, 0.5, post.x, post.y, 5);
+      pg.addColorStop(0, '#fffdf4');
+      pg.addColorStop(0.5, '#aab4bf');
+      pg.addColorStop(1, '#3a4048');
+      ctx.beginPath();
+      ctx.arc(post.x, post.y, 4.2, 0, Math.PI * 2);
+      ctx.fillStyle = pg;
+      ctx.fill();
+    }
+
+    const hot = sl.flash > 0;
+    ctx.strokeStyle = hot ? '#ffffff' : p.slingGlow;
+    ctx.lineWidth = 6.5;
+    ctx.lineCap = 'round';
+    if (hot){
+      ctx.shadowColor = p.slingGlow;
+      ctx.shadowBlur = 18;
+    }
+    ctx.beginPath();
+    ctx.moveTo(sl.a.x, sl.a.y);
+    ctx.lineTo(sl.b.x, sl.b.y);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    for (const t of [0.32, 0.68]){
+      const bx = sl.a.x + (sl.b.x - sl.a.x) * t;
+      const by = sl.a.y + (sl.b.y - sl.a.y) * t;
+      ctx.beginPath();
+      ctx.arc(bx, by, 2.6, 0, Math.PI * 2);
+      ctx.fillStyle = hot ? '#fffbe8' : withAlpha(p.slingGlow, 0.9);
+      ctx.fill();
+    }
+    ctx.restore();
+    sl.flash = Math.max(0, sl.flash - 1 / 60);
+  }
+}
+
+function drawDrops(theme, modeAccent){
+  for (const dp of dropList){
+    const x = dp.c.x - dp.w / 2;
+    const y = dp.c.y - dp.h / 2;
+    if (dp.down){
+      roundRectPath(ctx, x, y + 3, dp.w, dp.h, 2);
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      continue;
+    }
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    roundRectPath(ctx, x + 1, y + 3, dp.w, dp.h, 2);
+    ctx.fill();
+
+    const g = ctx.createLinearGradient(0, y, 0, y + dp.h);
+    g.addColorStop(0, '#fff8d8');
+    g.addColorStop(0.18, modeAccent);
+    g.addColorStop(1, withAlpha(modeAccent, 0.55));
+    roundRectPath(ctx, x, y, dp.w, dp.h, 2);
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x + 2, y + 1.5);
+    ctx.lineTo(x + dp.w - 2, y + 1.5);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(30,12,4,0.34)';
+    ctx.lineWidth = 2;
+    const stripeGap = Math.max(7, dp.w / 4);
+    for (let sx = x + stripeGap; sx < x + dp.w; sx += stripeGap){
+      ctx.beginPath();
+      ctx.moveTo(sx, y + 2);
+      ctx.lineTo(sx - 4, y + dp.h - 2);
+      ctx.stroke();
+    }
+
+    ctx.font = `bold ${Math.max(6, Math.min(9, dp.h - 3))}px ${FONT_UI}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(30,12,4,0.75)';
+    ctx.fillText('DROP', dp.c.x, dp.c.y + 0.5);
+    ctx.restore();
+  }
+}
+
+function drawFlippers(theme){
+  const p = theme.palette;
+  const list = [flippers.miniL, flippers.L, flippers.R].filter(Boolean);
+  for (const f of list){
+    const tip = flipperTip(f);
+    const mini = f === flippers.miniL;
+    const w = mini ? 9 : 14;
+    ctx.save();
+    ctx.lineCap = 'round';
+
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+    ctx.lineWidth = w + 5;
+    ctx.beginPath();
+    ctx.moveTo(f.pivot.x + 2, f.pivot.y + 3);
+    ctx.lineTo(tip.x + 2, tip.y + 3);
+    ctx.stroke();
+
+    ctx.strokeStyle = p.slingGlow;
+    ctx.lineWidth = w + 4.5;
+    if (f.pressed){
+      ctx.shadowColor = p.slingGlow;
+      ctx.shadowBlur = 14;
+    }
+    ctx.beginPath();
+    ctx.moveTo(f.pivot.x, f.pivot.y);
+    ctx.lineTo(tip.x, tip.y);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    ctx.strokeStyle = '#f7edd4';
+    ctx.lineWidth = w;
+    ctx.beginPath();
+    ctx.moveTo(f.pivot.x, f.pivot.y);
+    ctx.lineTo(tip.x, tip.y);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = Math.max(1.5, w * 0.28);
+    ctx.beginPath();
+    ctx.moveTo(f.pivot.x, f.pivot.y - w * 0.2);
+    ctx.lineTo(tip.x, tip.y - w * 0.2);
+    ctx.stroke();
+
+    const radius = mini ? 6 : 9;
+    const pg = ctx.createRadialGradient(f.pivot.x - 2, f.pivot.y - 2, 1, f.pivot.x, f.pivot.y, radius);
+    pg.addColorStop(0, '#fffdf4');
+    pg.addColorStop(0.5, '#c9d2dc');
+    pg.addColorStop(1, '#4d555e');
+    ctx.beginPath();
+    ctx.arc(f.pivot.x, f.pivot.y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = pg;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function drawPlunger(nowSec, theme){
+  const p = theme.palette;
+  const charge = plunger.charge;
+  const x = 400;
+  ctx.save();
+  ctx.lineCap = 'round';
+
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.fillRect(384, 666, 32, 44);
+
+  const top = 680, bottom = 710, coils = 8;
+  ctx.strokeStyle = '#b9c5d1';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  for (let i = 0; i <= coils; i++){
+    const t = i / coils;
+    const y = top + (bottom - top) * t;
+    const xo = (i % 2 === 0 ? -5 : 5) * (1 - charge * 0.35);
+    if (i === 0) ctx.moveTo(x + xo, y); else ctx.lineTo(x + xo, y);
+  }
+  ctx.stroke();
+
+  ctx.strokeStyle = '#8d99a6';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x, 674);
+  ctx.lineTo(x, 708);
+  ctx.stroke();
+
+  const ky = 712 + charge * 3;
+  const kg = ctx.createRadialGradient(x - 2, ky - 2, 1, x, ky, 8);
+  kg.addColorStop(0, '#ffd9c4');
+  kg.addColorStop(0.5, p.slingGlow);
+  kg.addColorStop(1, withAlpha('#2a0a04', 0.9));
+  ctx.beginPath();
+  ctx.arc(x, ky, 7, 0, Math.PI * 2);
+  ctx.fillStyle = kg;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  if (state.phase === 'ready'){
+    const blink = 0.55 + 0.45 * Math.sin(nowSec * 6);
+    ctx.globalAlpha = blink;
+    ctx.fillStyle = p.insertOn;
+    ctx.font = `6px ${FONT_PIXEL}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('PULL', x, 652);
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
+
+function drawKickbackLamps(nowSec, theme){
+  const p = theme.palette;
+  const lamps = [
+    { x: 48, y: 470, on: state.kickback },
+    { x: 372, y: 470, on: state.rightKickback },
+  ];
+  for (const l of lamps){
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(l.x, l.y, 9, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fill();
+    ctx.strokeStyle = withAlpha(p.bumperGlow, l.on ? 0.85 : 0.25);
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(l.x, l.y, 5.5, 0, Math.PI * 2);
+    if (l.on){
+      ctx.fillStyle = p.bumperGlow;
+      ctx.shadowColor = p.bumperGlow;
+      ctx.shadowBlur = 10;
+    } else {
+      ctx.fillStyle = withAlpha(p.insertOff, 0.9);
+    }
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.font = `5px ${FONT_PIXEL}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = l.on ? '#2a1408' : withAlpha(p.textPrimary, 0.55);
+    ctx.fillText('K', l.x, l.y + 0.5);
+    ctx.fillStyle = withAlpha(p.textPrimary, 0.55);
+    ctx.fillText('SAVE', l.x, l.y + 16);
+    ctx.restore();
+  }
+
+  if (state.saverUntil > nowSec){
+    ctx.save();
+    ctx.globalAlpha = 0.55 + 0.35 * Math.sin(nowSec * 5);
+    ctx.font = `6px ${FONT_PIXEL}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#86ef9c';
+    ctx.fillText('BALL SAVER', CONFIG.W / 2, 688);
+    ctx.restore();
+  }
+}
+
+function drawDrain(theme){
+  const y = CONFIG.H - 17;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(DRAIN_LEFT + 6, y);
+  ctx.lineTo(DRAIN_RIGHT - 6, y);
+  ctx.lineTo(DRAIN_RIGHT - 12, y + 10);
+  ctx.lineTo(DRAIN_LEFT + 12, y + 10);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(60,10,16,0.85)';
+  ctx.fill();
+  ctx.strokeStyle = withAlpha('#ff5a6e', 0.7);
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.font = `5px ${FONT_PIXEL}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ff8a98';
+  ctx.fillText('DRAIN', CONFIG.W / 2, y + 4.5);
+
+  ctx.strokeStyle = withAlpha('#ff5a6e', 0.55);
+  ctx.lineWidth = 1.5;
+  for (let i = -1; i <= 1; i++){
+    const cx = CONFIG.W / 2 + i * 12;
+    ctx.beginPath();
+    ctx.moveTo(cx - 3, y - 14);
+    ctx.lineTo(cx, y - 10);
+    ctx.lineTo(cx + 3, y - 14);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawBall(theme){
+  const p = theme.palette;
+  const x = ball.p.x, y = ball.p.y, r = ball.r;
+
   for (let i = 0; i < trail.length; i++){
     const t = trail[i];
     const a = i / trail.length;
-    ctx.fillStyle = `rgba(255,255,255,${a*0.25})`;
-    ctx.beginPath(); ctx.arc(t.x, t.y, ball.r * a, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, r * a * 0.85, 0, Math.PI * 2);
+    ctx.fillStyle = withAlpha(p.bumperGlow, a * 0.18);
+    ctx.fill();
   }
-  const grad = ctx.createRadialGradient(ball.p.x, ball.p.y, 0, ball.p.x, ball.p.y, ball.r*2.5);
-  grad.addColorStop(0, 'rgba(255,255,255,0.8)');
-  grad.addColorStop(0.4, 'rgba(140,220,255,0.4)');
-  grad.addColorStop(1, 'rgba(140,220,255,0)');
-  ctx.fillStyle = grad;
-  ctx.beginPath(); ctx.arc(ball.p.x, ball.p.y, ball.r*2.5, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(ball.p.x, ball.p.y, ball.r, 0, Math.PI*2); ctx.fill();
-  for (const p of particles){
-    ctx.globalAlpha = Math.max(0, p.life*2);
-    ctx.fillStyle = p.color;
-    ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill();
+
+  ctx.save();
+  ctx.globalAlpha = 0.32;
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.ellipse(x + 1.5, y + 5, r * 0.95, r * 0.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  const g = ctx.createRadialGradient(x - r * 0.42, y - r * 0.48, r * 0.1, x, y, r);
+  g.addColorStop(0, '#ffffff');
+  g.addColorStop(0.35, '#e3ebf3');
+  g.addColorStop(0.75, '#9aa8b6');
+  g.addColorStop(1, '#525d68');
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(x - r * 0.35, y - r * 0.4, r * 0.24, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + r * 0.3, y + r * 0.45, r * 0.18, 0, Math.PI * 2);
+  ctx.fillStyle = withAlpha(p.bumperGlow, 0.25);
+  ctx.fill();
+}
+
+function drawParticles(){
+  for (const pt of particles){
+    ctx.globalAlpha = Math.max(0, pt.life * 2);
+    ctx.fillStyle = pt.color;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, 2, 0, Math.PI * 2);
+    ctx.fill();
   }
-  renderLightEffects();
-  // Floating score/event texts
+  ctx.globalAlpha = 1;
+}
+
+function drawFloatTexts(dtRender){
   for (let i = floatTexts.length - 1; i >= 0; i--){
     const ft = floatTexts[i];
     ft.x += ft.vx * dtRender;
     ft.y += ft.vy * dtRender;
     ft.life -= dtRender;
-    if (ft.life <= 0){ floatTexts.splice(i, 1); continue; }
+    if (ft.life <= 0){
+      floatTexts.splice(i, 1);
+      continue;
+    }
     const fa = Math.min(1, ft.life / (ft.maxLife * 0.35));
+    ctx.save();
     ctx.globalAlpha = fa;
     ctx.shadowColor = ft.color;
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = 10;
     ctx.fillStyle = ft.color;
-    ctx.font = "bold 11px 'Press Start 2P', monospace";
+    ctx.font = `9px ${FONT_PIXEL}`;
     ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     ctx.fillText(ft.text, ft.x, ft.y);
-    ctx.shadowBlur = 0;
+    ctx.restore();
   }
-  ctx.globalAlpha = 1;
-  ctx.textAlign = 'start';
+}
+
+function drawSuperBanner(nowSec, palette){
+  if (!bumperSuperActive(nowSec)) return;
+  const pulse = 0.6 + 0.4 * Math.sin(nowSec * 8);
+  ctx.save();
+  ctx.globalAlpha = pulse;
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  roundRectPath(ctx, 122, 92, 176, 22, 10);
+  ctx.fill();
+  ctx.strokeStyle = palette.insertOn;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.font = `7px ${FONT_PIXEL}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = palette.insertOn;
+  ctx.shadowColor = palette.insertOn;
+  ctx.shadowBlur = 10;
+  ctx.fillText('SUPER BUMPERS', CONFIG.W / 2, 104);
   ctx.restore();
+}
 
-  // HUD panels live above the translated board so they never cover gameplay.
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-  ctx.fillRect(6, 4, 252, 54);
-  ctx.fillRect(292, 4, 122, 54);
+function drawBackglassDynamic(nowSec, theme, superBumpers){
+  const p = theme.palette;
+  const cab = theme.cabinet;
+  const BX = CONFIG.BACK_X, BY = CONFIG.BACK_Y;
+  const dy = BY + 100;
+  const c = ctx;
 
-  ctx.fillStyle = palette.textAccent;
-  ctx.font = "10px 'Press Start 2P', monospace";
-  ctx.fillText('NEON PINBALL', 8, 16);
-  ctx.fillStyle = palette.textPrimary;
-  ctx.fillText('SCORE ' + state.score.toString().padStart(7,'0'), 8, 32);
-  ctx.fillText('BALLS ' + state.balls, 8, 46);
-  if (state.dropCycles > 0){
-    ctx.fillStyle = palette.insertOn;
-    ctx.fillText('BNK x' + state.dropCycles, 150, 46);
-  }
-  const hudRightX = 364;
-  ctx.textAlign = 'right';
-  ctx.fillStyle = state.mult > 1 ? palette.insertOn : '#888';
-  ctx.fillText('MULT x' + state.mult, hudRightX, 16);
+  c.save();
+  c.textBaseline = 'alphabetic';
+  c.textAlign = 'left';
+  c.font = `7px ${FONT_PIXEL}`;
+  c.fillStyle = withAlpha(p.textAccent, 0.95);
+  c.fillText('SCORE', BX + 18, dy + 14);
+  drawSeg7Number(c, BX + 18, dy + 21, 15, 29, 4, state.score, 7, p.displayOn, p.displayOff, 9);
+
+  c.fillStyle = withAlpha(p.textAccent, 0.95);
+  c.fillText('BALL', BX + 164, dy + 14);
+  drawSeg7Number(c, BX + 164, dy + 21, 15, 29, 4, state.balls, 1, p.displayOn, p.displayOff, 8);
+
+  c.fillStyle = withAlpha(p.textAccent, 0.95);
+  c.fillText('MULT', BX + 202, dy + 14);
+  drawSeg7Number(c, BX + 202, dy + 21, 15, 29, 4, state.mult, 1, p.displayOn, p.displayOff, 8);
+
+  const ix = BX + 244;
+  c.font = `7px ${FONT_PIXEL}`;
+  c.fillStyle = withAlpha(p.textPrimary, 0.62);
+  c.fillText('BEST ' + String(Math.min(9999999, state.hi)).padStart(7, '0'), ix, dy + 16);
+  c.fillStyle = cab.trim;
+  c.fillText(theme.name.toUpperCase(), ix, dy + 32);
+
+  let status = getActiveMode().name.toUpperCase();
+  let statusColor = withAlpha(p.textPrimary, 0.82);
+  if (state.dropCycles > 0) status += ' B' + state.dropCycles;
   if (state.saverUntil > nowSec){
-    ctx.fillStyle = '#5f5';
-    ctx.fillText('SAVER', hudRightX, 30);
-  }
-  if (state.kickback){
-    ctx.fillStyle = palette.bumperGlow;
-    ctx.shadowColor = palette.bumperGlow; ctx.shadowBlur = 6;
-    ctx.fillText('KBCK', hudRightX, 44);
-    ctx.shadowBlur = 0;
-  } else if (state.kickbackFlash > 0){
-    ctx.globalAlpha = state.kickbackFlash / 0.8;
-    ctx.fillStyle = palette.bumperGlow;
-    ctx.fillText('KBCK', hudRightX, 44);
-    ctx.globalAlpha = 1;
-    state.kickbackFlash = Math.max(0, state.kickbackFlash - 1/60);
-  }
-  // Right kickback indicator
-  if (state.rightKickback){
-    ctx.fillStyle = palette.bumperGlow;
-    ctx.shadowColor = palette.bumperGlow; ctx.shadowBlur = 6;
-    ctx.fillText('R-KB', hudRightX, 56);
-    ctx.shadowBlur = 0;
-  } else if (state.rightKickbackFlash > 0){
-    ctx.globalAlpha = state.rightKickbackFlash / 0.8;
-    ctx.fillStyle = palette.bumperGlow;
-    ctx.fillText('R-KB', hudRightX, 56);
-    ctx.globalAlpha = 1;
-    state.rightKickbackFlash = Math.max(0, state.rightKickbackFlash - 1/60);
+    status = 'BALL SAVER';
+    statusColor = '#86ef9c';
   }
   if (superBumpers){
-    ctx.fillStyle = palette.bumperGlow;
-    ctx.textAlign = 'center';
-    ctx.shadowColor = palette.bumperGlow;
-    ctx.shadowBlur = 8;
-    ctx.fillText('SUPER BUMPERS', CONFIG.W/2, 56);
+    status = 'SUPER BUMPERS';
+    statusColor = p.displayOn;
+  }
+  c.fillStyle = statusColor;
+  c.fillText(status, ix, dy + 48);
+  c.restore();
+}
+
+function drawRailBulbs(nowSec, theme){
+  const p = theme.palette;
+  const cab = theme.cabinet;
+  const step = Math.floor(nowSec * 6);
+  for (const x of [54, VIEW.W - 54]){
+    for (let i = 0; i < 16; i++){
+      const y = 248 + i * 42;
+      const on = (i + step + (x > 270 ? 2 : 0)) % 4 === 0;
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = on ? p.insertOn : withAlpha(cab.trim, 0.22);
+      if (on){
+        ctx.shadowColor = p.insertOn;
+        ctx.shadowBlur = 8;
+      }
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+}
+
+function drawCabinetButtons(theme){
+  const p = theme.palette;
+  const cab = theme.cabinet;
+  const buttons = [
+    { x: 34, y: 806, pressed: input.L, label: 'L' },
+    { x: VIEW.W - 34, y: 806, pressed: input.R, label: 'R' },
+  ];
+  for (const b of buttons){
+    ctx.save();
+    const ring = ctx.createLinearGradient(b.x - 15, b.y - 15, b.x + 15, b.y + 15);
+    ring.addColorStop(0, '#fff9ea');
+    ring.addColorStop(0.4, cab.chrome);
+    ring.addColorStop(0.7, '#7d725f');
+    ring.addColorStop(1, cab.trimDark);
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 15, 0, Math.PI * 2);
+    ctx.fillStyle = '#160c07';
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = ring;
+    ctx.stroke();
+
+    const face = ctx.createRadialGradient(b.x - 4, b.y - 5, 1, b.x, b.y, 11);
+    face.addColorStop(0, b.pressed ? '#ffffff' : '#ffd9a1');
+    face.addColorStop(0.5, p.slingGlow);
+    face.addColorStop(1, withAlpha(p.slingGlow, 0.45));
+    ctx.beginPath();
+    ctx.arc(b.x, b.y + (b.pressed ? 1 : 0), 9.5, 0, Math.PI * 2);
+    ctx.fillStyle = face;
+    if (b.pressed){
+      ctx.shadowColor = p.slingGlow;
+      ctx.shadowBlur = 16;
+    }
+    ctx.fill();
     ctx.shadowBlur = 0;
-    ctx.textAlign = 'start';
-  }
-  if (state.phase === 'gameover'){
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.fillRect(0, CONFIG.H/2 - 40, CONFIG.W, 80);
-    ctx.fillStyle = '#f5a';
-    ctx.font = "16px 'Press Start 2P', monospace";
+
+    ctx.font = `6px ${FONT_PIXEL}`;
     ctx.textAlign = 'center';
-    ctx.fillText('GAME OVER', CONFIG.W/2, CONFIG.H/2);
-    ctx.font = "10px 'Press Start 2P', monospace";
-    ctx.fillStyle = '#fff';
-    ctx.fillText('PRESS SPACE', CONFIG.W/2, CONFIG.H/2 + 24);
-    ctx.textAlign = 'start';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(30,12,6,0.8)';
+    ctx.fillText(b.label, b.x, b.y + 1);
+    ctx.restore();
+  }
+}
+
+function drawApronText(theme){
+  const p = theme.palette;
+  ctx.save();
+  ctx.textBaseline = 'middle';
+  ctx.font = `6px ${FONT_PIXEL}`;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = withAlpha(p.textPrimary, 0.88);
+  ctx.fillText(getCabinetMenuIndicatorText(), VIEW.W / 2, 944);
+
+  ctx.font = `5px ${FONT_PIXEL}`;
+  ctx.fillStyle = withAlpha(p.textAccent, 0.7);
+  ctx.textAlign = 'left';
+  ctx.fillText('Z / LEFT', CONFIG.PLAY_X + 6, 944);
+  ctx.textAlign = 'right';
+  ctx.fillText('/ RIGHT', CONFIG.PLAY_X + CONFIG.PLAY_W - 6, 944);
+  ctx.restore();
+}
+
+function drawGameOver(nowSec, theme){
+  const p = theme.palette;
+  const cab = theme.cabinet;
+  const c = ctx;
+  c.save();
+  c.fillStyle = 'rgba(0,0,0,0.58)';
+  c.fillRect(CONFIG.PLAY_X, CONFIG.PLAY_Y, CONFIG.PLAY_W, CONFIG.PLAY_H);
+
+  const w = 360, h = 186, x = (VIEW.W - w) / 2, y = 430;
+  const g = c.createLinearGradient(0, y, 0, y + h);
+  g.addColorStop(0, 'rgba(26,12,8,0.97)');
+  g.addColorStop(1, 'rgba(8,3,2,0.98)');
+  c.save();
+  c.shadowColor = 'rgba(0,0,0,0.8)';
+  c.shadowBlur = 30;
+  roundRectPath(c, x, y, w, h, 12);
+  c.fillStyle = g;
+  c.fill();
+  c.restore();
+  c.lineWidth = 2;
+  c.strokeStyle = cab.trim;
+  c.shadowColor = cab.trim;
+  c.shadowBlur = 16;
+  roundRectPath(c, x, y, w, h, 12);
+  c.stroke();
+  c.shadowBlur = 0;
+  roundRectPath(c, x + 6, y + 6, w - 12, h - 12, 8);
+  c.lineWidth = 1;
+  c.strokeStyle = 'rgba(255,255,255,0.12)';
+  c.stroke();
+
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.font = `18px ${FONT_PIXEL}`;
+  c.fillStyle = p.textAccent;
+  c.shadowColor = p.textAccent;
+  c.shadowBlur = 14;
+  c.fillText('GAME OVER', VIEW.W / 2, y + 42);
+  c.shadowBlur = 0;
+
+  c.font = `7px ${FONT_PIXEL}`;
+  c.fillStyle = withAlpha(p.textPrimary, 0.7);
+  c.fillText('FINAL SCORE', VIEW.W / 2, y + 66);
+  drawSeg7Number(c, VIEW.W / 2 - 78, y + 76, 18, 32, 5, state.score, 7, p.displayOn, p.displayOff, 10);
+
+  c.font = `7px ${FONT_PIXEL}`;
+  c.fillStyle = withAlpha(p.textPrimary, 0.55);
+  c.fillText('BEST ' + String(Math.min(9999999, state.hi)).padStart(7, '0'), VIEW.W / 2, y + 128);
+
+  const blink = 0.5 + 0.5 * Math.sin(nowSec * 4);
+  c.globalAlpha = 0.35 + blink * 0.65;
+  c.fillStyle = p.textPrimary;
+  c.font = `7px ${FONT_PIXEL}`;
+  c.fillText('PRESS SPACE TO PLAY AGAIN', VIEW.W / 2, y + 158);
+  c.globalAlpha = 1;
+  c.restore();
+}
+
+function menuSection(c, y, text, color, x, xEnd){
+  c.font = `8px ${FONT_PIXEL}`;
+  c.textAlign = 'left';
+  c.textBaseline = 'middle';
+  c.fillStyle = color;
+  c.fillText(text, x, y);
+  const tw = c.measureText(text).width;
+  c.strokeStyle = withAlpha(color, 0.28);
+  c.lineWidth = 1;
+  c.beginPath();
+  c.moveTo(x + tw + 10, y);
+  c.lineTo(xEnd, y);
+  c.stroke();
+}
+
+function drawMenuRow(c, x, y, w, h, key, label, selected, theme, swatch, accent){
+  const p = theme.palette;
+  const col = accent || p.textAccent;
+
+  if (selected){
+    roundRectPath(c, x, y, w, h, 5);
+    c.fillStyle = withAlpha(col, 0.14);
+    c.fill();
+    c.strokeStyle = withAlpha(col, 0.5);
+    c.lineWidth = 1;
+    c.stroke();
+    c.fillStyle = col;
+    c.fillRect(x + 1, y + 4, 3, h - 8);
   }
 
-  ctx.fillStyle = palette.textAccent;
-  ctx.font = "7px 'Press Start 2P', monospace";
-  ctx.textAlign = 'start';
-  const activeMode = getActiveMode();
-  ctx.fillText(theme.name.toUpperCase(), 8, 58);
-  ctx.fillStyle = activeMode.accentColor || palette.textAccent;
-  ctx.fillText(activeMode.name.toUpperCase(), 150, 58);
+  roundRectPath(c, x + 10, y + h / 2 - 8, 18, 16, 3);
+  c.fillStyle = selected ? col : 'rgba(255,255,255,0.06)';
+  c.fill();
+  c.strokeStyle = selected ? col : 'rgba(255,255,255,0.18)';
+  c.lineWidth = 1;
+  c.stroke();
 
-  const cabinetHint = getCabinetMenuIndicatorText();
-  const hintY = CONFIG.H - 24;
-  ctx.fillStyle = palette.textPrimary;
-  ctx.font = "7px 'Press Start 2P', monospace";
-  ctx.textAlign = 'center';
-  const hintWidth = ctx.measureText(cabinetHint).width;
-  ctx.fillStyle = 'rgba(0,0,0,0.55)';
-  ctx.fillRect((CONFIG.W - hintWidth) / 2 - 6, hintY - 9, hintWidth + 12, 12);
-  ctx.fillStyle = palette.textPrimary;
-  ctx.fillText(cabinetHint, CONFIG.W/2, hintY);
-  ctx.textAlign = 'start';
+  c.font = `8px ${FONT_PIXEL}`;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillStyle = selected ? '#1a0d06' : withAlpha(p.textPrimary, 0.8);
+  c.fillText(key, x + 19, y + h / 2 + 1);
 
-  renderMenuOverlay();
+  c.textAlign = 'left';
+  c.fillStyle = selected ? col : withAlpha(p.textPrimary, 0.8);
+  c.fillText(label, x + 38, y + h / 2 + 1);
+
+  if (swatch){
+    c.beginPath();
+    c.arc(x + w - 46, y + h / 2, 5.5, 0, Math.PI * 2);
+    c.fillStyle = swatch.fill;
+    c.fill();
+    c.strokeStyle = swatch.stroke;
+    c.lineWidth = 1.5;
+    c.stroke();
+  }
+
+  if (selected){
+    c.beginPath();
+    c.arc(x + w - 22, y + h / 2, 5, 0, Math.PI * 2);
+    c.fillStyle = col;
+    c.fill();
+    c.strokeStyle = 'rgba(20,10,4,0.9)';
+    c.lineWidth = 1.4;
+    c.beginPath();
+    c.moveTo(x + w - 24.5, y + h / 2);
+    c.lineTo(x + w - 22.5, y + h / 2 + 2);
+    c.lineTo(x + w - 19.5, y + h / 2 - 2);
+    c.stroke();
+  }
 }
 
 function renderMenuOverlay(){
   if (!menu.open) return;
-  const t = getActiveTheme();
-  const p = t.palette;
-  const controlLines = getCabinetMenuControlLines();
-  const ruleLines = getCabinetMenuRuleLines();
-  ctx.fillStyle = 'rgba(0,0,0,0.72)';
-  ctx.fillRect(20, 80, CONFIG.W - 40, 480);
-  ctx.strokeStyle = p.textAccent;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(20, 80, CONFIG.W - 40, 480);
-  ctx.fillStyle = p.textPrimary;
-  ctx.font = "10px 'Press Start 2P', monospace";
-  ctx.textAlign = 'center';
-  ctx.fillText('CABINET MENU', CONFIG.W/2, 114);
-  ctx.textAlign = 'left';
-  // Themes
-  ctx.fillStyle = p.textAccent;
-  ctx.fillText('THEMES', 50, 140);
-  ctx.fillStyle = p.textPrimary;
-  ctx.fillText('1 SUNBURST CLASSIC', 50, 160);
-  ctx.fillText('2 COSMIC WEDGE', 50, 180);
-  ctx.fillText('3 VOLCANO POP', 50, 200);
-  // Modes
-  ctx.fillStyle = p.textAccent;
-  ctx.fillText('MODES', 50, 226);
-  ctx.fillStyle = p.textPrimary;
-  ctx.fillText('4 TOP LANES', 50, 246);
-  ctx.fillText('5 DROP BANK', 50, 264);
-  ctx.fillText('6 SPELL NEON', 50, 282);
-  ctx.fillText('7 BUMPER FRENZY', 50, 300);
-  // Sound
-  ctx.fillText('S SOUND: ' + (settings.soundEnabled ? 'ON' : 'OFF'), 50, 322);
-  // Controls
-  ctx.fillStyle = p.textAccent;
-  ctx.fillText('PLAY CONTROLS', 50, 348);
-  ctx.fillStyle = p.textPrimary;
-  ctx.font = "8px 'Press Start 2P', monospace";
-  ctx.fillText(controlLines[0], 50, 368);
-  ctx.fillText(controlLines[1], 50, 386);
-  ctx.fillText(controlLines[2], 50, 404);
-  // Rules
-  ctx.fillStyle = p.textAccent;
-  ctx.font = "10px 'Press Start 2P', monospace";
-  ctx.fillText('GAME RULES', 50, 428);
-  ctx.fillStyle = p.textPrimary;
-  ctx.font = "8px 'Press Start 2P', monospace";
-  ctx.fillText(ruleLines[0], 50, 448);
-  ctx.fillText(ruleLines[1], 50, 464);
-  // Footer
-  ctx.font = "10px 'Press Start 2P', monospace";
-  ctx.fillText('ENTER APPLY/RESUME', 50, 488);
-  ctx.fillText('ESC CANCEL/RESUME', 50, 506);
-  ctx.textAlign = 'center';
-  ctx.fillText('THEME: ' + t.name.toUpperCase(), CONFIG.W/2, 530);
-  ctx.fillText('MODE: ' + getActiveMode().name.toUpperCase(), CONFIG.W/2, 550);
-  ctx.textAlign = 'start';
+  const theme = getActiveTheme();
+  const p = theme.palette;
+  const cab = theme.cabinet;
+  const c = ctx;
+  const W = VIEW.W, H = VIEW.H;
+  const PX = 58, PY = 250, PW = 424, PH = 500;
+  const rowX = PX + 20, rowW = PW - 40;
+  const accent = p.textAccent;
+
+  c.save();
+  c.fillStyle = 'rgba(4,2,6,0.66)';
+  c.fillRect(0, 0, W, H);
+
+  const panel = c.createLinearGradient(0, PY, 0, PY + PH);
+  panel.addColorStop(0, 'rgba(30,16,10,0.98)');
+  panel.addColorStop(1, 'rgba(9,4,3,0.99)');
+  c.save();
+  c.shadowColor = 'rgba(0,0,0,0.85)';
+  c.shadowBlur = 30;
+  c.shadowOffsetY = 12;
+  roundRectPath(c, PX, PY, PW, PH, 14);
+  c.fillStyle = panel;
+  c.fill();
+  c.restore();
+
+  roundRectPath(c, PX, PY, PW, PH, 14);
+  c.lineWidth = 2;
+  c.strokeStyle = cab.trim;
+  c.shadowColor = cab.trim;
+  c.shadowBlur = 18;
+  c.stroke();
+  c.shadowBlur = 0;
+  roundRectPath(c, PX + 6, PY + 6, PW - 12, PH - 12, 9);
+  c.lineWidth = 1;
+  c.strokeStyle = 'rgba(255,255,255,0.1)';
+  c.stroke();
+
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.font = `12px ${FONT_PIXEL}`;
+  c.fillStyle = accent;
+  c.shadowColor = accent;
+  c.shadowBlur = 16;
+  c.fillText('CABINET MENU', W / 2, PY + 30);
+  c.shadowBlur = 0;
+  c.font = `6px ${FONT_PIXEL}`;
+  c.fillStyle = withAlpha(p.textPrimary, 0.56);
+  c.fillText('SERVICE PANEL // ESC TO CLOSE', W / 2, PY + 48);
+  c.strokeStyle = withAlpha(cab.trim, 0.24);
+  c.lineWidth = 1;
+  c.beginPath();
+  c.moveTo(PX + 24, PY + 60);
+  c.lineTo(PX + PW - 24, PY + 60);
+  c.stroke();
+
+  menuSection(c, PY + 78, 'THEMES', accent, PX + 26, PX + PW - 26);
+  const themeRows = [
+    ['1', 'SUNBURST CLASSIC', 'sunburst-classic'],
+    ['2', 'COSMIC WEDGE', 'cosmic-wedge'],
+    ['3', 'VOLCANO POP', 'volcano-pop'],
+  ];
+  themeRows.forEach((row, i) => {
+    const t = THEME_PACKS[row[2]];
+    drawMenuRow(c, rowX, PY + 88 + i * 24, rowW, 20, row[0], row[1], settings.themeId === row[2], theme,
+      { fill: t.palette.bumperGlow, stroke: t.cabinet.trim }, accent);
+  });
+
+  menuSection(c, PY + 168, 'MODES', accent, PX + 26, PX + PW - 26);
+  const modeRows = [
+    ['4', 'TOP LANES', 'top-lanes'],
+    ['5', 'DROP BANK', 'drop-bank'],
+    ['6', 'SPELL NEON', 'spell-neon'],
+    ['7', 'BUMPER FRENZY', 'bumper-frenzy'],
+  ];
+  modeRows.forEach((row, i) => {
+    const m = GAMEPLAY_MODES[row[2]];
+    const accentColor = m.accentColor || p.bumperGlow;
+    drawMenuRow(c, rowX, PY + 178 + i * 24, rowW, 20, row[0], row[1], settings.gameplayModeId === row[2], theme,
+      { fill: accentColor, stroke: withAlpha(accentColor, 0.6) }, accentColor);
+  });
+
+  drawMenuRow(c, rowX, PY + 284, rowW, 20, 'S', 'SOUND', false, theme, null, accent);
+  const toggleW = 52;
+  roundRectPath(c, rowX + rowW - toggleW - 8, PY + 286, toggleW, 16, 8);
+  c.fillStyle = settings.soundEnabled ? withAlpha(accent, 0.28) : 'rgba(255,255,255,0.06)';
+  c.fill();
+  c.strokeStyle = settings.soundEnabled ? accent : 'rgba(255,255,255,0.2)';
+  c.lineWidth = 1;
+  c.stroke();
+  c.font = `7px ${FONT_PIXEL}`;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillStyle = settings.soundEnabled ? accent : withAlpha(p.textPrimary, 0.5);
+  c.fillText(settings.soundEnabled ? 'ON' : 'OFF', rowX + rowW - toggleW / 2 - 8, PY + 294);
+
+  menuSection(c, PY + 326, 'PLAY CONTROLS', accent, PX + 26, PX + PW - 26);
+  c.textAlign = 'left';
+  c.font = `7px ${FONT_PIXEL}`;
+  c.fillStyle = withAlpha(p.textPrimary, 0.82);
+  getCabinetMenuControlLines().forEach((line, i) => c.fillText(line, PX + 26, PY + 342 + i * 16));
+
+  menuSection(c, PY + 396, 'GAME RULES', accent, PX + 26, PX + PW - 26);
+  c.font = `7px ${FONT_PIXEL}`;
+  c.fillStyle = withAlpha(p.textPrimary, 0.82);
+  getCabinetMenuRuleLines().forEach((line, i) => c.fillText(line, PX + 26, PY + 412 + i * 16));
+
+  c.strokeStyle = withAlpha(cab.trim, 0.24);
+  c.lineWidth = 1;
+  c.beginPath();
+  c.moveTo(PX + 24, PY + 440);
+  c.lineTo(PX + PW - 24, PY + 440);
+  c.stroke();
+
+  c.textAlign = 'center';
+  c.font = `8px ${FONT_PIXEL}`;
+  c.fillStyle = accent;
+  c.fillText('ENTER  APPLY + RESUME', W / 2, PY + 458);
+  c.fillStyle = withAlpha(p.textPrimary, 0.62);
+  c.fillText('ESC  CANCEL + RESUME', W / 2, PY + 476);
+  c.restore();
+}
+
+function render(){
+  const dtRender = 1 / 60;
+  const nowSec = performance.now() / 1000;
+  const theme = getActiveTheme();
+  const palette = theme.palette;
+  const mode = getActiveMode();
+  const modeAccent = mode.accentColor || palette.bumperGlow;
+  const superBumpers = bumperSuperActive(nowSec);
+
+  updateLightEffects(dtRender);
+  trail.push({ x: ball.p.x, y: ball.p.y });
+  if (trail.length > 14) trail.shift();
+
+  for (let i = particles.length - 1; i >= 0; i--){
+    const pt = particles[i];
+    pt.vy += 200 * dtRender;
+    pt.x += pt.vx * dtRender;
+    pt.y += pt.vy * dtRender;
+    pt.life -= dtRender;
+    if (pt.life <= 0) particles.splice(i, 1);
+  }
+  if (shake > 0) shake = Math.max(0, shake - dtRender * 30);
+
+  ensureArtLayers();
+
+  const sx = shake > 0 ? (Math.random() - 0.5) * shake : 0;
+  const sy = shake > 0 ? (Math.random() - 0.5) * shake : 0;
+
+  ctx.save();
+  ctx.clearRect(0, 0, VIEW.W, VIEW.H);
+  ctx.drawImage(backdropCanvas, 0, 0);
+
+  ctx.save();
+  roundRectPath(ctx, VIEW.PX, VIEW.PY, VIEW.PW, VIEW.PH, 4);
+  ctx.clip();
+  ctx.translate(VIEW.PX + sx, VIEW.PY + sy);
+  ctx.drawImage(playfieldArtCanvas, 0, 0);
+
+  drawPlayfieldBulbs(nowSec, palette);
+  drawWalls(nowSec, theme, modeAccent);
+  drawTopLanes(modeAccent);
+  drawDrain(theme);
+  drawSlings(theme);
+  drawDrops(theme, modeAccent);
+  drawBumpers(nowSec, theme, modeAccent, superBumpers);
+  drawFlippers(theme);
+  drawPlunger(nowSec, theme);
+  drawKickbackLamps(nowSec, theme);
+  drawBall(theme);
+  drawParticles();
+  renderLightEffects();
+  drawFloatTexts(dtRender);
+  drawSuperBanner(nowSec, palette);
+  ctx.restore();
+
+  drawBackglassDynamic(nowSec, theme, superBumpers);
+  drawRailBulbs(nowSec, theme);
+  drawCabinetButtons(theme);
+  drawApronText(theme);
+  if (state.phase === 'gameover') drawGameOver(nowSec, theme);
+  renderMenuOverlay();
+  ctx.restore();
 }
 
 // ============ 10. LOOP ============
